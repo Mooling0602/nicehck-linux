@@ -8,6 +8,7 @@
 
 mod app;
 mod curve;
+mod fonts;
 mod theme;
 
 fn main() -> eframe::Result<()> {
@@ -22,6 +23,9 @@ fn main() -> eframe::Result<()> {
     eframe::run_native(
         "NICEHCK Headset Control",
         options,
-        Box::new(|cc| Ok(Box::new(app::NicehckApp::new(cc)))),
+        Box::new(|cc| {
+            fonts::install(&cc.egui_ctx);
+            Ok(Box::new(app::NicehckApp::new(cc)))
+        }),
     )
 }

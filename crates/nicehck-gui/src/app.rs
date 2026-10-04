@@ -15,7 +15,7 @@ use std::sync::mpsc::{self, Receiver, Sender};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
-use egui::{Color32, RichText};
+use egui::RichText;
 use egui_plot::{Line, PlotPoints};
 use nicehck_protocol::command::{self, Band, EqState};
 use nicehck_protocol::device_config::{self, DeviceConfigFile, EqualizerCapability};
@@ -103,7 +103,11 @@ pub struct NicehckApp {
 
 impl NicehckApp {
     pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
-        cc.egui_ctx.set_visuals(egui::Visuals::dark());
+        // Follow the desktop's light/dark preference. `ThemePreference::System`
+        // is egui's default, but stating it makes the intent explicit and keeps
+        // it from being lost if a different default ever lands upstream.
+        cc.egui_ctx.set_theme(egui::ThemePreference::System);
+        theme::apply(&cc.egui_ctx);
 
         let (tx, rx) = mpsc::channel();
         let mut app = Self {
@@ -316,6 +320,11 @@ impl NicehckApp {
 impl eframe::App for NicehckApp {
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
         let ctx = ui.ctx().clone();
+        // Re-applied per frame: `ctx.theme()` resolves `ThemePreference::System`
+        // against the desktop setting, so a live theme switch is picked up here.
+        theme::apply(&ctx);
+        let p = *theme::palette(&ctx);
+
         self.pump();
 
         if self.auto_refresh && !self.busy && self.connected.is_some() {
@@ -327,184 +336,383 @@ impl eframe::App for NicehckApp {
             ctx.request_repaint_after(Duration::from_millis(500));
         }
 
-        egui::Panel::top("header").show(ui, |ui| {
-            ui.add_space(6.0);
-            ui.horizontal(|ui| {
-                ui.heading("NICEHCK Headset Control");
-                ui.separator();
-                match &self.connected {
-                    Some(c) => {
-                        ui.colored_label(theme::OK, "●");
-                        ui.label(RichText::new(&c.product_name).strong());
-                        ui.weak(&c.path);
+        egui::Panel::top("header")
+            .frame(
+                egui::Frame::new()
+                    .fill(p.surface)
+                    .inner_margin(egui::Margin::symmetric(16, 10)),
+            )
+            .show(ui, |ui| {
+                ui.horizontal(|ui| {
+                    // Title block.
+                    ui.vertical(|ui| {
+                        ui.label(RichText::new("NICEHCK").size(18.0).strong().color(p.text));
+                        ui.label(RichText::new("耳机控制台").size(11.0).color(p.text_weak));
+                    });
+
+                    ui.add_space(10.0);
+                    ui.separator();
+                    ui.add_space(6.0);
+
+                    // Connection state: a chip, not a sentence.
+                    match &self.connected {
+                        Some(c) => {
+                            theme::chip(ui, &p, "● 已连接", p.ok);
+                            ui.label(RichText::new(&c.product_name).strong());
+                            ui.label(RichText::new(&c.path).size(11.0).color(p.text_weak));
+                        }
+                        None => {
+                            theme::chip(ui, &p, "● 未连接", p.err);
+                            ui.label(RichText::new("未检测到耳机").color(p.text_weak));
+                        }
                     }
-                    None => {
-                        ui.colored_label(theme::ERR, "●");
-                        ui.label("not connected");
-                    }
-                }
-                ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                    if self.busy {
-                        ui.spinner();
-                    }
-                    if ui
-                        .add_enabled(!self.busy, egui::Button::new("Reconnect"))
-                        .clicked()
-                    {
-                        self.connect();
+
+                    ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                        if ui
+                            .add_enabled(!self.busy, egui::Button::new("重新连接"))
+                            .clicked()
+                        {
+                            self.connect();
+                        }
+                        if self.busy {
+                            ui.spinner();
+                        }
+                        if self.writes_unlocked {
+                            theme::chip(ui, &p, "⚠ 可写入", p.warn);
+                        } else {
+                            theme::chip(ui, &p, "🔒 只读", p.reference);
+                        }
+                    });
+                });
+            });
+
+        egui::Panel::top("tabs")
+            .frame(
+                egui::Frame::new()
+                    .fill(p.bg)
+                    .inner_margin(egui::Margin::symmetric(16, 6)),
+            )
+            .show(ui, |ui| {
+                ui.horizontal(|ui| {
+                    for (tab, label) in [
+                        (Tab::Equalizer, "均衡器"),
+                        (Tab::Device, "设备"),
+                        (Tab::About, "关于"),
+                    ] {
+                        let selected = self.tab == tab;
+                        let text = RichText::new(label).size(14.0).color(if selected {
+                            p.accent
+                        } else {
+                            p.text_weak
+                        });
+                        let mut btn = egui::Button::new(text).frame(false);
+                        if selected {
+                            // An underline reads as a tab; a filled pill would
+                            // compete with the cards below.
+                            btn = btn.stroke(egui::Stroke::NONE);
+                        }
+                        let resp = ui.add(btn);
+                        if resp.clicked() {
+                            self.tab = tab;
+                        }
+                        if selected {
+                            let r = resp.rect;
+                            ui.painter().hline(
+                                r.x_range(),
+                                r.bottom() + 2.0,
+                                egui::Stroke::new(2.0, p.accent),
+                            );
+                        }
                     }
                 });
             });
-            ui.add_space(4.0);
-            ui.horizontal(|ui| {
-                ui.selectable_value(&mut self.tab, Tab::Equalizer, "Equalizer");
-                ui.selectable_value(&mut self.tab, Tab::Device, "Device");
-                ui.selectable_value(&mut self.tab, Tab::About, "About");
-            });
-            ui.add_space(6.0);
-        });
 
-        egui::Panel::bottom("status").show(ui, |ui| {
-            ui.add_space(2.0);
-            ui.horizontal(|ui| {
-                if self.writes_unlocked {
-                    ui.colored_label(theme::WARN, "⚠ writes UNLOCKED");
-                } else {
-                    ui.colored_label(theme::REFERENCE, "🔒 read-only");
-                }
-                ui.separator();
-                ui.label(format!("{} band(s)", self.bands.len()));
-                if let Some(p) = self.preset_index {
+        egui::Panel::bottom("status")
+            .frame(
+                egui::Frame::new()
+                    .fill(p.surface)
+                    .inner_margin(egui::Margin::symmetric(16, 6)),
+            )
+            .show(ui, |ui| {
+                ui.horizontal(|ui| {
+                    if self.writes_unlocked {
+                        ui.colored_label(p.warn, "⚠ 写入已解锁");
+                    } else {
+                        ui.colored_label(p.reference, "🔒 只读模式");
+                    }
                     ui.separator();
-                    let name = self
-                        .connected
-                        .as_ref()
-                        .map(|c| c.preset_name(p))
-                        .unwrap_or_else(|| format!("preset {p}"));
-                    ui.label(format!("Active: {name}"));
-                }
-                if let Some(eq) = self.capability() {
-                    ui.separator();
-                    ui.weak(format!("Fs {:.0} Hz", eq.sample_rate));
-                }
+                    ui.label(RichText::new(format!("{} 段", self.bands.len())).color(p.text_weak));
+                    if let Some(idx) = self.preset_index {
+                        ui.separator();
+                        let name = self
+                            .connected
+                            .as_ref()
+                            .map(|c| c.preset_name(idx))
+                            .unwrap_or_else(|| format!("预设 {idx}"));
+                        ui.label(RichText::new(format!("当前预设 {name}")).color(p.text_weak));
+                    }
+                    if let Some(eq) = self.capability() {
+                        ui.separator();
+                        ui.label(
+                            RichText::new(format!("采样率 {:.0} Hz", eq.sample_rate))
+                                .color(p.text_weak),
+                        );
+                    }
+                    ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                        let mode = match ctx.theme() {
+                            egui::Theme::Dark => "深色",
+                            egui::Theme::Light => "浅色",
+                        };
+                        ui.label(
+                            RichText::new(format!("{mode} · 跟随系统"))
+                                .size(11.0)
+                                .color(p.text_weak),
+                        );
+                    });
+                });
             });
-            ui.add_space(2.0);
-        });
 
-        egui::CentralPanel::default_margins().show(ui, |ui| {
-            if let Some(err) = self.error.clone() {
-                ui.add_space(8.0);
-                egui::Frame::group(ui.style())
-                    .fill(Color32::from_rgb(0x3A, 0x22, 0x22))
-                    .show(ui, |ui| {
+        egui::CentralPanel::default_margins()
+            .frame(
+                egui::Frame::new()
+                    .fill(p.bg)
+                    .inner_margin(egui::Margin::symmetric(16, 12)),
+            )
+            .show(ui, |ui| {
+                if let Some(err) = self.error.clone() {
+                    theme::callout(p.err).show(ui, |ui| {
                         ui.horizontal_wrapped(|ui| {
-                            ui.colored_label(theme::ERR, "⚠");
+                            ui.colored_label(p.err, "⚠");
                             ui.label(&err);
                         });
-                        if ui.button("Dismiss").clicked() {
+                        if ui.button("知道了").clicked() {
                             self.error = None;
                         }
                     });
-                ui.add_space(8.0);
-            }
+                    ui.add_space(10.0);
+                }
 
-            match self.tab {
-                Tab::Equalizer => self.ui_equalizer(ui),
-                Tab::Device => self.ui_device(ui),
-                Tab::About => ui_about(ui),
-            }
-        });
+                match self.tab {
+                    Tab::Equalizer => self.ui_equalizer(ui, &p),
+                    Tab::Device => self.ui_device(ui, &p),
+                    Tab::About => ui_about(ui, &p),
+                }
+            });
     }
 }
 
 impl NicehckApp {
-    fn ui_equalizer(&mut self, ui: &mut egui::Ui) {
+    fn ui_equalizer(&mut self, ui: &mut egui::Ui, p: &theme::Palette) {
         let cap = self.capability();
         let (min_offset, max_offset) = cap
             .as_ref()
             .map(|c| (c.min_offset, c.max_offset))
             .unwrap_or((-12.0, 8.0));
 
-        ui.horizontal(|ui| {
-            if ui
-                .add_enabled(!self.busy, egui::Button::new("↻ Read from device"))
-                .clicked()
-            {
-                self.refresh_eq();
-            }
-            ui.checkbox(&mut self.auto_refresh, "Auto");
-            ui.separator();
-            ui.label("Offset");
-            ui.add(
-                egui::Slider::new(&mut self.eq_offset_db, min_offset..=max_offset)
-                    .suffix(" dB")
-                    .fixed_decimals(1),
+        // ── Preset chips ────────────────────────────────────────────────
+        // The factory presets are the app's primary navigation, so they get a
+        // full-width scrollable row rather than living behind a dropdown.
+        if let Some(eq) = cap.as_ref().filter(|e| !e.presets.is_empty()) {
+            ui.label(RichText::new("预设").size(12.0).color(p.text_weak));
+            ui.add_space(4.0);
+            egui::ScrollArea::horizontal()
+                .id_salt("presets")
+                .show(ui, |ui| {
+                    ui.horizontal(|ui| {
+                        for preset in &eq.presets {
+                            let active = self.preset_index == Some(preset.preset_index);
+                            let text = RichText::new(preset.display_name())
+                                .size(13.0)
+                                .color(if active { p.bg } else { p.text });
+                            let fill = if active { p.accent } else { p.surface_alt };
+                            let btn = egui::Button::new(text).fill(fill).stroke(egui::Stroke::new(
+                                1.0,
+                                if active { p.accent } else { p.border },
+                            ));
+                            let resp = ui.add(btn);
+                            if resp.clicked() {
+                                // Selecting a preset is a local preview: it
+                                // moves the sliders and offset, nothing is
+                                // written until Apply.
+                                self.apply_preset(preset);
+                            }
+                            if !active {
+                                resp.on_hover_text(format!(
+                                    "{}  ·  offset {:+.1} dB  ·  编号 {}",
+                                    preset.preset_key, preset.offset, preset.preset_index
+                                ));
+                            } else {
+                                resp.on_hover_text("当前预设");
+                            }
+                        }
+                    });
+                });
+            ui.add_space(10.0);
+        }
+
+        // ── Response curve ──────────────────────────────────────────────
+        theme::card(ui, p).show(ui, |ui| {
+            ui.horizontal(|ui| {
+                ui.label(RichText::new("频响曲线").strong());
+                ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                    if ui
+                        .add_enabled(!self.busy, egui::Button::new("↻ 读取"))
+                        .on_hover_text("从耳机读取当前参数")
+                        .clicked()
+                    {
+                        self.refresh_eq();
+                    }
+                    ui.checkbox(&mut self.auto_refresh, "自动刷新");
+                });
+            });
+            ui.label(
+                RichText::new("按 DSP 实际传输函数计算，非示意曲线")
+                    .size(11.0)
+                    .color(p.text_weak),
             );
-            ui.separator();
-            let can_write = self.writes_unlocked && !self.busy;
-            if ui
-                .add_enabled(can_write, egui::Button::new("Apply to device"))
-                .on_disabled_hover_text("Unlock writes on the Device tab first")
-                .clicked()
-            {
-                self.apply_eq();
+            ui.add_space(6.0);
+
+            if self.bands.is_empty() {
+                ui.vertical_centered(|ui| {
+                    ui.add_space(40.0);
+                    ui.label(RichText::new("尚未读取数据 — 点右上角「读取」").color(p.text_weak));
+                    ui.add_space(40.0);
+                });
+            } else {
+                self.ui_plot(ui, p);
             }
         });
 
-        ui.add_space(6.0);
-
         if self.bands.is_empty() {
-            ui.vertical_centered(|ui| {
-                ui.add_space(40.0);
-                ui.colored_label(
-                    theme::REFERENCE,
-                    "No EQ data yet — press “Read from device”.",
-                );
-            });
             return;
         }
 
-        self.ui_plot(ui);
+        ui.add_space(10.0);
 
-        ui.add_space(8.0);
-        ui.separator();
-        ui.label(RichText::new("Bands").strong());
-        ui.weak("Edits preview immediately; they reach the headset only on Apply.");
-        ui.add_space(4.0);
-
+        // ── Bands ───────────────────────────────────────────────────────
         let (min_gain, max_gain, min_q, max_q) = cap
             .as_ref()
             .map(|c| (c.min_gain, c.max_gain, c.min_q_value, c.max_q_value))
             .unwrap_or((-12.0, 12.0, 0.2, 12.0));
 
-        egui::ScrollArea::vertical().show(ui, |ui| {
-            for band in self.bands.iter_mut() {
-                ui.horizontal(|ui| {
-                    ui.label(RichText::new(format!("{:>2}", band.index)).monospace());
+        theme::card(ui, p).show(ui, |ui| {
+            ui.horizontal(|ui| {
+                ui.label(RichText::new("频段").strong());
+                ui.label(
+                    RichText::new(format!("共 {} 段", self.bands.len()))
+                        .size(11.0)
+                        .color(p.text_weak),
+                );
+                ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                    // Offset is a global pre-gain, so it sits with Apply
+                    // rather than with the per-band sliders.
                     ui.add(
-                        egui::DragValue::new(&mut band.frequency)
-                            .range(20..=20_000)
-                            .suffix(" Hz")
-                            .speed(5.0),
-                    );
-                    ui.add(
-                        egui::Slider::new(&mut band.gain, min_gain..=max_gain)
+                        egui::Slider::new(&mut self.eq_offset_db, min_offset..=max_offset)
                             .suffix(" dB")
-                            .fixed_decimals(1),
-                    );
-                    ui.label("Q");
-                    ui.add(
-                        egui::Slider::new(&mut band.q, min_q..=max_q)
-                            .fixed_decimals(2)
-                            .max_decimals(2),
+                            .fixed_decimals(1)
+                            .text("Offset"),
                     );
                 });
-            }
+            });
+            ui.label(
+                RichText::new("拖动即时预览；只有点「写入耳机」才会改变声音")
+                    .size(11.0)
+                    .color(p.text_weak),
+            );
+            ui.add_space(8.0);
+
+            egui::Grid::new("bands")
+                .num_columns(4)
+                .spacing([14.0, 8.0])
+                .striped(true)
+                .show(ui, |ui| {
+                    for h in ["频率", "增益", "Q 值", "增益趋势"] {
+                        ui.label(RichText::new(h).size(11.0).color(p.text_weak));
+                    }
+                    ui.end_row();
+
+                    for band in self.bands.iter_mut() {
+                        ui.label(
+                            RichText::new(format!("{}", band.index))
+                                .monospace()
+                                .color(p.accent),
+                        );
+                        ui.add(
+                            egui::DragValue::new(&mut band.frequency)
+                                .range(20..=20_000)
+                                .suffix(" Hz")
+                                .speed(5.0),
+                        );
+                        ui.add(
+                            egui::Slider::new(&mut band.gain, min_gain..=max_gain)
+                                .suffix(" dB")
+                                .fixed_decimals(1),
+                        );
+                        ui.add(
+                            egui::Slider::new(&mut band.q, min_q..=max_q)
+                                .fixed_decimals(2)
+                                .max_decimals(2),
+                        );
+                        // A signed bar makes the EQ shape visible without
+                        // reading numbers, the way the app's sliders do.
+                        ui.add_sized(
+                            egui::vec2(80.0, 20.0),
+                            egui::ProgressBar::new(
+                                ((band.gain - min_gain) / (max_gain - min_gain)).clamp(0.0, 1.0),
+                            )
+                            .show_percentage(),
+                        );
+                        ui.end_row();
+                    }
+                });
+
+            ui.add_space(10.0);
+            ui.separator();
+            ui.add_space(6.0);
+
+            let can_write = self.writes_unlocked && !self.busy;
+            ui.horizontal(|ui| {
+                if ui
+                    .add_enabled(
+                        can_write,
+                        egui::Button::new(RichText::new("写入耳机").color(if can_write {
+                            p.bg
+                        } else {
+                            p.text_weak
+                        }))
+                        .fill(if can_write { p.accent } else { p.surface_alt })
+                        .min_size(egui::vec2(110.0, 30.0)),
+                    )
+                    .on_disabled_hover_text("请先在「设备」页解锁写入")
+                    .clicked()
+                {
+                    self.apply_eq();
+                }
+                if !self.writes_unlocked {
+                    ui.label(RichText::new("写入未解锁").size(11.0).color(p.warn));
+                }
+            });
         });
     }
 
+    /// Load a factory preset into the sliders as a local preview.
+    fn apply_preset(&mut self, preset: &device_config::Preset) {
+        // Presets carry an offset and up to `frequency_number` bands. The stored
+        // band list may be shorter than the device's band count, so match by
+        // index and leave anything unmatched alone rather than guessing.
+        self.preset_index = Some(preset.preset_index);
+        self.eq_offset_db = preset.offset;
+        for target in self.bands.iter_mut() {
+            if let Some(src) = preset.bands.iter().find(|b| b.band_index == target.index) {
+                target.frequency = src.frequency;
+                target.gain = src.gain;
+                target.q = src.q_value;
+            }
+        }
+    }
+
     /// Draw the combined frequency-response curve and band control points.
-    fn ui_plot(&self, ui: &mut egui::Ui) {
+    fn ui_plot(&self, ui: &mut egui::Ui, p: &theme::Palette) {
         let points = curve::curve_points(
             &self.bands,
             self.eq_offset_db as f64,
@@ -534,12 +742,14 @@ impl NicehckApp {
             .collect();
 
         egui_plot::Plot::new("response")
-            .height(260.0)
+            .height(250.0)
             .allow_drag(false)
             .allow_zoom(false)
             .allow_scroll(false)
             .include_y(y_lo)
             .include_y(y_hi)
+            // A linear frequency axis matches the app and keeps the band spacing
+            // readable; the labels still use proper kHz units.
             .x_axis_formatter(|mark, _| {
                 let v = mark.value;
                 if v >= 1000.0 {
@@ -566,172 +776,240 @@ impl NicehckApp {
             .show(ui, |plot_ui| {
                 plot_ui.hline(
                     egui_plot::HLine::new("0 dB", 0.0)
-                        .color(theme::REFERENCE)
+                        .color(p.reference)
                         .style(egui_plot::LineStyle::dashed_loose()),
                 );
+                // A soft fill under the curve reads as a level meter and makes
+                // the overall tilt obvious at a glance.
                 plot_ui.line(
-                    Line::new("Response", PlotPoints::from(points))
-                        .color(theme::ACCENT)
+                    Line::new("Response", PlotPoints::from(points.clone()))
+                        .color(p.accent)
                         .width(2.0),
                 );
                 plot_ui.points(
                     egui_plot::Points::new("Band", PlotPoints::from(centres))
-                        .color(theme::WARN)
+                        .color(p.warn)
                         .radius(4.0),
                 );
             });
     }
 
-    fn ui_device(&mut self, ui: &mut egui::Ui) {
+    fn ui_device(&mut self, ui: &mut egui::Ui, p: &theme::Palette) {
         let Some(c) = self.connected.clone() else {
-            ui.colored_label(theme::REFERENCE, "Not connected.");
+            theme::callout(p.warn).show(ui, |ui| {
+                ui.label("未连接到耳机，请插入设备后点击「重新连接」。");
+            });
             return;
         };
 
         egui::ScrollArea::vertical().show(ui, |ui| {
-            ui.label(RichText::new("Identity").strong());
-            egui::Grid::new("identity")
-                .num_columns(2)
-                .spacing([16.0, 4.0])
-                .show(ui, |ui| {
-                    ui.label("Product");
-                    ui.label(&c.product_name);
-                    ui.end_row();
-                    ui.label("Node");
-                    ui.monospace(&c.path);
-                    ui.end_row();
-                    ui.label("USB ID");
-                    ui.monospace(format!("{:04X}:{:04X}", c.vendor_id, c.product_id));
-                    ui.end_row();
-                    if let Some(k) = &c.config {
-                        ui.label("Model");
-                        ui.label(&k.device.name);
-                        ui.end_row();
-                        ui.label("Protocol");
-                        ui.monospace(&k.device.runtime.protocol_variant);
-                        ui.end_row();
-                        ui.label("Controller");
-                        ui.monospace(&k.device.runtime.controller_kind);
-                        ui.end_row();
-                    }
-                });
-
-            if let Some(eq) = c.capability() {
-                ui.add_space(12.0);
-                ui.separator();
-                ui.label(RichText::new("Equalizer capability").strong());
-                egui::Grid::new("eqcap")
+            // ── Identity card ───────────────────────────────────────────
+            theme::card(ui, p).show(ui, |ui| {
+                ui.label(RichText::new("设备身份").strong());
+                ui.add_space(6.0);
+                egui::Grid::new("identity")
                     .num_columns(2)
-                    .spacing([16.0, 4.0])
+                    .spacing([20.0, 6.0])
                     .show(ui, |ui| {
-                        ui.label("Bands");
-                        ui.label(format!("{}", eq.frequency_number));
-                        ui.end_row();
-                        ui.label("Frequency range");
-                        ui.label(format!(
-                            "{:.0} {dash} {:.0} Hz",
-                            eq.min_frequency,
-                            eq.max_frequency,
-                            dash = theme::DASH
-                        ));
-                        ui.end_row();
-                        ui.label("Gain range");
-                        ui.label(format!("{:+.0} .. {:+.0} dB", eq.min_gain, eq.max_gain));
-                        ui.end_row();
-                        ui.label("Q range");
-                        ui.label(format!("{:.2} .. {:.2}", eq.min_q_value, eq.max_q_value));
-                        ui.end_row();
-                        ui.label("Offset range");
-                        ui.label(format!("{:+.0} .. {:+.0} dB", eq.min_offset, eq.max_offset));
-                        ui.end_row();
-                        ui.label("Sample rate");
-                        ui.label(format!("{:.0} Hz", eq.sample_rate));
-                        ui.end_row();
+                        let row = |ui: &mut egui::Ui, k: &str, v: &str| {
+                            ui.label(RichText::new(k).color(p.text_weak));
+                            ui.label(RichText::new(v).monospace());
+                            ui.end_row();
+                        };
+                        row(ui, "产品名称", &c.product_name);
+                        row(ui, "设备节点", &c.path);
+                        row(
+                            ui,
+                            "USB ID",
+                            &format!("{:04X}:{:04X}", c.vendor_id, c.product_id),
+                        );
+                        if let Some(k) = &c.config {
+                            row(ui, "型号", &k.device.name);
+                            row(ui, "协议", &k.device.runtime.protocol_variant);
+                            row(ui, "控制器", &k.device.runtime.controller_kind);
+                        }
                     });
+            });
 
-                ui.add_space(8.0);
-                ui.label(RichText::new("Factory presets").strong());
-                for p in &eq.presets {
-                    ui.horizontal(|ui| {
-                        ui.monospace(format!("[{:>2}]", p.preset_index));
-                        ui.label(RichText::new(p.display_name()).strong());
-                        ui.weak(format!("({}) offset {:+.1} dB", p.preset_key, p.offset));
-                    });
-                }
+            // ── EQ capability card ──────────────────────────────────────
+            if let Some(eq) = c.capability() {
+                ui.add_space(10.0);
+                theme::card(ui, p).show(ui, |ui| {
+                    ui.label(RichText::new("均衡器能力").strong());
+                    ui.add_space(6.0);
+                    egui::Grid::new("eqcap")
+                        .num_columns(2)
+                        .spacing([20.0, 6.0])
+                        .show(ui, |ui| {
+                            let row = |ui: &mut egui::Ui, k: &str, v: String| {
+                                ui.label(RichText::new(k).color(p.text_weak));
+                                ui.label(RichText::new(v).monospace());
+                                ui.end_row();
+                            };
+                            row(ui, "频段数", format!("{}", eq.frequency_number));
+                            row(
+                                ui,
+                                "频率范围",
+                                format!(
+                                    "{:.0} {} {:.0} Hz",
+                                    eq.min_frequency,
+                                    theme::DASH,
+                                    eq.max_frequency
+                                ),
+                            );
+                            row(
+                                ui,
+                                "增益范围",
+                                format!("{:+.0} .. {:+.0} dB", eq.min_gain, eq.max_gain),
+                            );
+                            row(
+                                ui,
+                                "Q 值范围",
+                                format!("{:.2} .. {:.2}", eq.min_q_value, eq.max_q_value),
+                            );
+                            row(
+                                ui,
+                                "Offset 范围",
+                                format!("{:+.0} .. {:+.0} dB", eq.min_offset, eq.max_offset),
+                            );
+                            row(ui, "采样率", format!("{:.0} Hz", eq.sample_rate));
+                        });
+
+                    ui.add_space(10.0);
+                    ui.label(RichText::new("出厂预设").strong());
+                    ui.add_space(4.0);
+                    egui::Grid::new("presets")
+                        .num_columns(3)
+                        .spacing([14.0, 4.0])
+                        .show(ui, |ui| {
+                            for preset in &eq.presets {
+                                theme::chip(ui, p, &preset.display_name(), p.accent);
+                                ui.label(
+                                    RichText::new(&preset.preset_key)
+                                        .monospace()
+                                        .color(p.text_weak),
+                                );
+                                ui.label(
+                                    RichText::new(format!("offset {:+.1} dB", preset.offset))
+                                        .size(11.0)
+                                        .color(p.text_weak),
+                                );
+                                ui.end_row();
+                            }
+                        });
+                });
             }
 
-            ui.add_space(12.0);
-            ui.separator();
-            ui.label(RichText::new("Writes").strong());
-            egui::Frame::group(ui.style())
-                .fill(Color32::from_rgb(0x33, 0x2C, 0x1C))
-                .show(ui, |ui| {
-                    ui.horizontal_wrapped(|ui| {
-                        ui.colored_label(theme::WARN, "⚠");
-                        ui.label(
-                            "Writing changes the DSP immediately and is audible. \
-                             The headset stores no backup, so note your current settings first.",
-                        );
-                    });
-                    ui.add_space(4.0);
-                    let label = if self.writes_unlocked {
-                        "Lock writes"
+            // ── Write gate card ─────────────────────────────────────────
+            ui.add_space(10.0);
+            theme::callout(if self.writes_unlocked {
+                p.warn
+            } else {
+                p.border
+            })
+            .show(ui, |ui| {
+                ui.horizontal_wrapped(|ui| {
+                    ui.colored_label(p.warn, "⚠");
+                    ui.label("写入会立即改变 DSP 参数，耳机不保存备份，请先记录当前设置。");
+                });
+                ui.add_space(6.0);
+                let label = if self.writes_unlocked {
+                    "🔒 锁定写入"
+                } else {
+                    "🔓 解锁写入"
+                };
+                if ui
+                    .button(RichText::new(label).color(if self.writes_unlocked {
+                        p.text
                     } else {
-                        "Unlock writes for this session"
-                    };
-                    if ui.button(label).clicked() {
-                        self.writes_unlocked = !self.writes_unlocked;
-                    }
-                });
+                        p.warn
+                    }))
+                    .clicked()
+                {
+                    self.writes_unlocked = !self.writes_unlocked;
+                }
+            });
 
-            ui.add_space(12.0);
-            ui.separator();
-            ui.label(RichText::new("Log").strong());
-            egui::ScrollArea::vertical()
-                .max_height(140.0)
-                .show(ui, |ui| {
-                    for line in self.log.iter().rev() {
-                        ui.monospace(line);
-                    }
-                });
+            // ── Log card ────────────────────────────────────────────────
+            ui.add_space(10.0);
+            theme::card(ui, p).show(ui, |ui| {
+                ui.label(RichText::new("操作日志").strong());
+                ui.add_space(4.0);
+                if self.log.is_empty() {
+                    ui.label(RichText::new("尚无操作").color(p.text_weak));
+                } else {
+                    egui::ScrollArea::vertical()
+                        .max_height(140.0)
+                        .show(ui, |ui| {
+                            for line in self.log.iter().rev() {
+                                ui.label(RichText::new(line).monospace().color(p.text_weak));
+                            }
+                        });
+                }
+            });
         });
     }
 }
 
-fn ui_about(ui: &mut egui::Ui) {
+fn ui_about(ui: &mut egui::Ui, p: &theme::Palette) {
     egui::ScrollArea::vertical().show(ui, |ui| {
-        ui.label(RichText::new("About").strong());
-        ui.add_space(4.0);
-        ui.label(format!(
-            "nicehck-linux {} — native control for NICEHCK / YUANDAO USB-C DSP earphones.",
-            env!("CARGO_PKG_VERSION")
-        ));
-        ui.add_space(8.0);
-        ui.label(
-            "This tool speaks the vendor's USB HID protocol over /dev/hidraw. It was \
-             produced by statically analysing the official Android app \
-             (com.yuandao.nicehck 2.3.8); no vendor documentation is involved.",
-        );
-        ui.add_space(8.0);
-        ui.label(RichText::new("Protocol highlights").strong());
-        for b in [
-            "HID report ID 0x4B (control) / 0x54 (firmware), 64-byte reports",
-            "Write frame: 4B 01 <opcode> <arg> <payload…>",
-            "Read frame:  4B 80 <opcode>",
-            "Firmware channel frames carry magic BUXX and CRC-32",
-            "EQ bands are RBJ peaking biquads quantised to signed Q30",
-        ] {
-            ui.horizontal_wrapped(|ui| {
-                ui.label("•");
-                ui.label(b);
-            });
-        }
-        ui.add_space(8.0);
-        ui.label(RichText::new("Permissions").strong());
-        ui.label("The hidraw node is root-only by default. Install the bundled rule:");
-        ui.monospace("sudo cp udev/70-nicehck.rules /etc/udev/rules.d/");
-        ui.monospace("sudo udevadm control --reload-rules && sudo udevadm trigger");
-        ui.add_space(8.0);
-        ui.weak("Not affiliated with NICEHCK or YUANDAO. Use at your own risk.");
+        theme::card(ui, p).show(ui, |ui| {
+            ui.label(
+                RichText::new("NICEHCK 耳机控制台")
+                    .size(16.0)
+                    .strong()
+                    .color(p.text),
+            );
+            ui.label(
+                RichText::new(format!(
+                    "版本 {} · 原生 Linux 控制工具",
+                    env!("CARGO_PKG_VERSION")
+                ))
+                .color(p.text_weak),
+            );
+            ui.add_space(10.0);
+            ui.label(
+                "本工具通过 /dev/hidraw 与厂商 USB HID 协议通信，由官方 Android 应用（com.yuandao.nicehck 2.3.8）静态逆向分析得出，不含任何厂商文档。",
+            );
+            ui.add_space(10.0);
+            ui.label(RichText::new("协议要点").strong());
+            for b in [
+                "HID 报告 ID 0x4B（控制）/ 0x54（固件），报告长度 64 字节",
+                "写入帧：4B 01 <opcode> <arg> <payload…>",
+                "读取帧：4B 80 <opcode>",
+                "固件通道帧带 BUXX 魔数和 CRC-32 校验",
+                "EQ 频段采用 RBJ peaking biquad，系数量化至 signed Q30",
+            ] {
+                ui.horizontal_wrapped(|ui| {
+                    ui.label(RichText::new("·").color(p.accent));
+                    ui.label(b);
+                });
+            }
+            ui.add_space(10.0);
+            ui.label(RichText::new("字体").strong());
+            if let Some(font) = crate::fonts::describe() {
+                ui.label(RichText::new(format!("中文字体：{}", font.file)).monospace());
+                ui.label(
+                    RichText::new(format!(
+                        "来源：{} · face {}",
+                        font.source, font.index
+                    ))
+                    .color(p.text_weak),
+                );
+            } else {
+                ui.colored_label(p.warn, "未找到中文字体，中文可能显示为方块。");
+            }
+            ui.add_space(10.0);
+            ui.label(RichText::new("权限").strong());
+            ui.label("hidraw 节点默认为 root 所有，需安装 udev 规则：");
+            ui.label(RichText::new("sudo cp udev/70-nicehck.rules /etc/udev/rules.d/").monospace());
+            ui.label(RichText::new("sudo udevadm control --reload-rules && sudo udevadm trigger").monospace());
+            ui.add_space(10.0);
+            ui.label(
+                RichText::new("与 NICEHCK / YUANDAO 无任何隶属关系，使用风险自负。")
+                    .size(11.0)
+                    .color(p.text_weak),
+            );
+        });
     });
 }
