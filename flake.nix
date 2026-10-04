@@ -95,15 +95,44 @@
           };
         });
 
-      # `nixosModules.default` / `programs.nicehck.enable = true` installs both the
-      # binaries and the udev rule in one declarative step.
+      # Two independent switches, because the permission rule and the binaries are
+      # separate concerns: someone building from source only wants the udev rule.
+      #
+      #   programs.nicehck.udevRules = true;   # grant hidraw access
+      #   programs.nicehck.install   = true;   # also put the binaries on PATH
       nixosModules.default = { config, lib, pkgs, ... }: {
-        options.programs.nicehck.enable =
-          lib.mkEnableOption "NICEHCK / YUANDAO headset control";
+        options.programs.nicehck = {
+          enable = lib.mkEnableOption "NICEHCK / YUANDAO headset support (both switches below)";
 
-        config = lib.mkIf config.programs.nicehck.enable {
-          services.udev.packages = [ self.packages.${pkgs.system}.udevRules ];
-          environment.systemPackages = [ self.packages.${pkgs.system}.default ];
+          udevRules = lib.mkOption {
+            type = lib.types.bool;
+            default = config.programs.nicehck.enable;
+            defaultText = lib.literalExpression "config.programs.nicehck.enable";
+            description = ''
+              Install the udev rule that lets the logged-in user reach the
+              headset's vendor HID interface, so no sudo and no manual `cp` is
+              needed. This alone is enough if you run the tool from a build tree.
+            '';
+          };
+
+          install = lib.mkOption {
+            type = lib.types.bool;
+            default = config.programs.nicehck.enable;
+            defaultText = lib.literalExpression "config.programs.nicehck.enable";
+            description = ''
+              Add `nicehck` and `nicehck-gui` to the system profile.
+            '';
+          };
+        };
+
+        config = {
+          services.udev.packages =
+            lib.mkIf config.programs.nicehck.udevRules
+              [ self.packages.${pkgs.stdenv.hostPlatform.system}.udevRules ];
+
+          environment.systemPackages =
+            lib.mkIf config.programs.nicehck.install
+              [ self.packages.${pkgs.stdenv.hostPlatform.system}.default ];
         };
       };
 
