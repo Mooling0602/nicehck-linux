@@ -540,33 +540,103 @@ impl NicehckApp {
                     ui.label(RichText::new("耳机控制台").size(11.0).color(p.text_weak));
 
                     ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                        // Close last (rightmost), then maximise, then
-                        // minimise — matching the usual desktop order.
-                        let close =
-                            ui.add(egui::Button::new(RichText::new("✕").size(12.0)).frame(false));
-                        if close.hovered() {
-                            ui.painter().rect_filled(
-                                close.rect,
+                        // Icons drawn with Painter: the CJK font we load has no
+                        // dingbat glyphs, so text icons (✕ ▢ ❐) rendered as tofu.
+                        let stroke_w = 1.4;
+                        let icon_r = 5.0;
+
+                        // Close (rightmost)
+                        let (close_rect, close_resp) =
+                            ui.allocate_exact_size(egui::vec2(30.0, 28.0), egui::Sense::click());
+                        let painter = ui.painter();
+                        if close_resp.hovered() {
+                            painter.rect_filled(
+                                close_rect,
                                 egui::CornerRadius::same(theme::CHIP_RADIUS),
-                                p.err.gamma_multiply(0.35),
+                                p.err.gamma_multiply(0.45),
                             );
                         }
-                        if close.clicked() {
+                        let c = close_rect.center();
+                        painter.line_segment(
+                            [
+                                c - egui::vec2(icon_r, icon_r),
+                                c + egui::vec2(icon_r, icon_r),
+                            ],
+                            egui::Stroke::new(stroke_w, p.text),
+                        );
+                        painter.line_segment(
+                            [
+                                c + egui::vec2(icon_r, -icon_r),
+                                c - egui::vec2(icon_r, -icon_r),
+                            ],
+                            egui::Stroke::new(stroke_w, p.text),
+                        );
+                        if close_resp.clicked() {
                             ctx.send_viewport_cmd(egui::ViewportCommand::Close);
                         }
 
+                        // Maximise / restore
                         let maximised = ctx.input(|i| i.viewport().maximized.unwrap_or(false));
-                        let max_icon = if maximised { "❐" } else { "▢" };
-                        let max_btn = ui.add(
-                            egui::Button::new(RichText::new(max_icon).size(12.0)).frame(false),
-                        );
-                        if max_btn.clicked() {
+                        let (max_rect, max_resp) =
+                            ui.allocate_exact_size(egui::vec2(30.0, 28.0), egui::Sense::click());
+                        let painter = ui.painter();
+                        if max_resp.hovered() {
+                            painter.rect_filled(
+                                max_rect,
+                                egui::CornerRadius::same(theme::CHIP_RADIUS),
+                                p.text.gamma_multiply(0.15),
+                            );
+                        }
+                        let c = max_rect.center();
+                        let sk = egui::StrokeKind::Inside;
+                        if maximised {
+                            painter.rect_stroke(
+                                egui::Rect::from_center_size(
+                                    c + egui::vec2(-1.5, -1.5),
+                                    egui::vec2(7.0, 7.0),
+                                ),
+                                egui::CornerRadius::ZERO,
+                                egui::Stroke::new(1.2, p.text),
+                                sk,
+                            );
+                            painter.rect_stroke(
+                                egui::Rect::from_center_size(
+                                    c + egui::vec2(1.5, 1.5),
+                                    egui::vec2(7.0, 7.0),
+                                ),
+                                egui::CornerRadius::ZERO,
+                                egui::Stroke::new(1.2, p.text),
+                                sk,
+                            );
+                        } else {
+                            painter.rect_stroke(
+                                egui::Rect::from_center_size(c, egui::vec2(10.0, 10.0)),
+                                egui::CornerRadius::ZERO,
+                                egui::Stroke::new(1.2, p.text),
+                                sk,
+                            );
+                        }
+                        if max_resp.clicked() {
                             ctx.send_viewport_cmd(egui::ViewportCommand::Maximized(!maximised));
                         }
 
-                        let min_btn =
-                            ui.add(egui::Button::new(RichText::new("—").size(12.0)).frame(false));
-                        if min_btn.clicked() {
+                        // Minimise
+                        let (min_rect, min_resp) =
+                            ui.allocate_exact_size(egui::vec2(30.0, 28.0), egui::Sense::click());
+                        let painter = ui.painter();
+                        if min_resp.hovered() {
+                            painter.rect_filled(
+                                min_rect,
+                                egui::CornerRadius::same(theme::CHIP_RADIUS),
+                                p.text.gamma_multiply(0.15),
+                            );
+                        }
+                        let c = min_rect.center();
+                        painter.line_segment(
+                            [c - egui::vec2(5.0, 0.0), c + egui::vec2(5.0, 0.0)],
+                            egui::Stroke::new(stroke_w, p.text),
+                        );
+                        if min_resp.clicked() {
                             ctx.send_viewport_cmd(egui::ViewportCommand::Minimized(true));
                         }
                     });
@@ -580,6 +650,7 @@ impl NicehckApp {
         // ScrollArea lets the whole page scroll instead of clipping.
         egui::ScrollArea::vertical()
             .id_salt("eq_scroll")
+            .auto_shrink(false)
             .show(ui, |ui| {
                 self.ui_equalizer_inner(ui, p);
             });
@@ -887,6 +958,7 @@ impl NicehckApp {
 
         egui::ScrollArea::vertical()
             .id_salt("device_scroll")
+            .auto_shrink(false)
             .show(ui, |ui| {
                 // ── Identity card ───────────────────────────────────────────
                 theme::card(ui, p).show(ui, |ui| {
@@ -1040,6 +1112,7 @@ impl NicehckApp {
 fn ui_about(ui: &mut egui::Ui, p: &theme::Palette) {
     egui::ScrollArea::vertical()
         .id_salt("about_scroll")
+        .auto_shrink(false)
         .show(ui, |ui| {
         theme::card(ui, p).show(ui, |ui| {
             ui.label(

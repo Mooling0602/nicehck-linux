@@ -297,52 +297,101 @@ pub fn describe() -> Option<LoadedFont> {
 /// Install CJK-capable fonts into `ctx`, keeping egui's defaults as fallbacks.
 ///
 /// Returns what was loaded, or `None` when nothing usable was found.
-pub fn install(ctx: &egui::Context) -> Option<LoadedFont> {
-    let Some((face, source)) = find_cjk_face() else {
-        eprintln!(
-            "nicehck-gui: 未找到中文字体，中文将显示为方块。\n\
-             可安装任一含简体中文的字体包，例如 noto-fonts-cjk-sans、思源黑体或更纱黑体。"
-        );
-        return None;
-    };
-
-    let Ok(bytes) = std::fs::read(&face.path) else {
-        eprintln!(
-            "nicehck-gui: 无法读取 {}，中文将显示为方块。",
-            face.path.display()
-        );
-        return None;
-    };
-
+/// Load one font file into a `FontData`, or return `None` on failure.
+fn load_face(face: &Face) -> Option<FontData> {
+    let bytes = std::fs::read(&face.path).ok()?;
     if is_definitely_not_a_font(&bytes) {
-        eprintln!(
-            "nicehck-gui: {} (face {}) 不是有效的字体文件，中文将显示为方块。",
-            face.path.display(),
-            face.index
-        );
+        return None;
+    }
+    let mut data = FontData::from_owned(bytes);
+    data.index = face.index;
+    Some(data)
+}
+
+/// Try `fc-match` for a pattern, then fall back to `KNOWN_FACES` / directory scan.
+///
+/// For Latin we use the bare `sans-serif` pattern (no `:lang=` suffix) so
+/// fontconfig returns whatever the desktop considers its UI font. For CJK we
+/// qualify with `:lang=zh-cn` to force coverage-aware resolution.
+fn find_face(pattern: &str, known: &[(&str, u32)]) -> Option<(Face, Source)> {
+    if let Some(face) = fc_match(pattern) {
+        return Some((face, Source::Fontconfig));
+    }
+    if let Some(face) = known
+        .iter()
+        .map(|(path, index)| Face::new(*path, *index))
+        .find(|face| face.path.is_file())
+    {
+        return Some((face, Source::KnownPath));
+    }
+    scan_for_face().map(|face| (face, Source::DirectoryScan))
+}
+
+pub fn install(ctx: &egui::Context) -> Option<LoadedFont> {
+    // Latin / UI font: the desktop's own sans-serif, so Latin and digits match
+    // every other app on the machine rather than egui's bundled Ubuntu-Light.
+    let latin = find_face("sans-serif", &[]);
+
+    // CJK font: coverage-aware so a Latin-only default cannot sneak through.
+    let cjk = find_cjk_face();
+
+    // If neither is found, keep egui's defaults and say so.
+    if latin.is_none() && cjk.is_none() {
+        eprintln!("nicehck-gui: 未找到系统字体，将使用 egui 内置字体（中文显示为方块）。");
         return None;
     }
 
     let mut fonts = FontDefinitions::default();
-    let mut data = FontData::from_owned(bytes);
-    data.index = face.index;
-    fonts
-        .font_data
-        .insert("cjk".to_owned(), std::sync::Arc::new(data));
 
-    // Append rather than insert at the front: egui's own face keeps its metrics
-    // for Latin text and digits, and the CJK face covers what it lacks. Appending
-    // is also what makes this a *fallback* rather than a replacement.
-    for family in [FontFamily::Proportional, FontFamily::Monospace] {
+    // Proportional chain: system sans-serif first, CJK second, egui defaults
+    // last. Order matters — egui walks the list until a face has the glyph.
+    let mut proportional: Vec<String> = Vec::new();
+    let mut monospace: Vec<String> = Vec::new();
+
+    // Helper: load a face and register it under `name`.
+    let add = |fonts: &mut FontDefinitions, name: &str, face: &Face| -> bool {
+        let Some(data) = load_face(face) else {
+            return false;
+        };
         fonts
-            .families
-            .entry(family)
-            .or_default()
-            .push("cjk".to_owned());
+            .font_data
+            .insert(name.to_owned(), std::sync::Arc::new(data));
+        true
+    };
+
+    // Latin face — primary for both families (it also has digits and symbols).
+    if let Some((face, _source)) = &latin {
+        if add(&mut fonts, "ui", face) {
+            proportional.push("ui".to_owned());
+            monospace.push("ui".to_owned());
+        }
     }
+
+    // CJK face — catches everything the Latin face lacks.
+    if let Some((face, _source)) = &cjk {
+        if add(&mut fonts, "cjk", face) {
+            proportional.push("cjk".to_owned());
+            monospace.push("cjk".to_owned());
+        }
+    }
+
+    // egui defaults as the last-resort fallback (emoji, symbols).
+    for name in ["Ubuntu-Light", "NotoEmoji-Regular", "emoji-icon-font"] {
+        if fonts.font_data.contains_key(name) {
+            proportional.push(name.to_owned());
+            monospace.push(name.to_owned());
+        }
+    }
+
+    fonts
+        .families
+        .insert(FontFamily::Proportional, proportional);
+    fonts.families.insert(FontFamily::Monospace, monospace);
 
     ctx.set_fonts(fonts);
 
+    // Report the CJK face (the more interesting one for the About tab).
+    let (face, source) = cjk.as_ref().or(latin.as_ref())?;
     let file = face
         .path
         .file_name()
