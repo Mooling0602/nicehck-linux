@@ -345,13 +345,26 @@ logind uaccess 机制工作正常，缺的只是针对 `3302` 的规则。
 
 ### 7.3 Nix 打包（已验证）
 
-- `nicehck-udev-rules` 的规则落在 `$out/etc/udev/rules.d/70-nicehck.rules`，
-  这正是 NixOS `udevRulesFor` 扫描的路径
-  （`$package/{etc,lib}/udev/rules.d/*.rules`）
-- 把**二进制包**传给 `services.udev.packages` 不会生效，必须传 `udevRules` 包
-- `nixosModules.default` 在真实 NixOS 配置中求值通过，
-  `nicehck-udev-rules` 出现在 `services.udev.packages`，且规则被复制进
-  `environment.etc."udev/rules.d"` 的 store 产物中，排序位于
-  `73-seat-late.rules` 之前
+udev 规则**随主包分发**：主包的 `postInstall` 把规则装到
+`$out/etc/udev/rules.d/70-nicehck.rules`，这正是 NixOS `udevRulesFor` 扫描的
+路径（`$package/{etc,lib}/udev/rules.d/*.rules`）。
+
+这样设计的理由是：如果规则单独成包，用户把**二进制包**传给
+`services.udev.packages` 时不会报错，只是规则根本没被扫到，权限静默不生效。
+规则与二进制同包后，`services.udev.packages = [ nicehck-linux ]` 直接生效，
+不存在传错的可能。`packages.udevRules` 保留为同一 store 路径的别名。
+
+- `nixosModules.default` 在真实 NixOS 配置中求值通过：
+  `programs.nicehck.udevRules = true` 时规则被复制进
+  `environment.etc."udev/rules.d"` 的 store 产物，`programs.nicehck.install = false`
+  时 `environment.systemPackages` 中确实没有 `nicehck-linux`
+- 规则排序位于 `73-seat-late.rules` 之前（实测第 380 行 vs 第 385 行）
 - `udevadm verify` 对规则文件报 `Success: 1 Fail: 0`
+- `udevadm test -D <dir>` 实测确认规则目录是**按文件名合并排序**而非追加，
+  因此 `-D` 目录里的 `70-nicehck.rules` 插入在 `73-seat-late.rules` 之前
+
+**注意 `services.udev.extraRules` 不可用**：它写死为 `99-local.rules`，
+排在 `73-seat-late.rules` 之后。uaccess 是"先打标签、后消费标签"的两段式——
+`73-seat-late.rules` 里的 `TAG=="uaccess" -> RUN{builtin}+="uaccess"` 才是真正
+施加 ACL 的地方，标签设得太迟就完全无效。实测该文件被排到第 436 行。
 

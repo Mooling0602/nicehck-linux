@@ -67,12 +67,11 @@ cargo build --release
 
 ### 方式三：NixOS 声明式
 
-在 `flake.nix` 里加入本仓库作为 input，然后用自带的 NixOS 模块一步装好
-**程序 + udev 规则**：
+在 `flake.nix` 里加入本仓库作为 input，然后用自带的 NixOS 模块：
 
 ```nix
 {
-  inputs.nicehck-linux.url = "path:/path/to/nicehck-linux";   # 或 git URL
+  inputs.nicehck-linux.url = "github:Mooling0602/nicehck-linux";
 
   outputs = { self, nixpkgs, nicehck-linux, ... }: {
     nixosConfigurations.yourhost = nixpkgs.lib.nixosSystem {
@@ -85,41 +84,71 @@ cargo build --release
 }
 ```
 
-不想用模块也可以手动接线。**注意 `udevRules` 是单独的包**：NixOS 的
-`services.udev.packages` 只会扫描每个包里的 `etc/udev/rules.d/*.rules`，
-而二进制包里没有规则，传错了会**静默不生效**。
+**udev 规则随主包分发**，所以不需要第二个包、也没有"传错了静默失效"的坑：
+主包里带着 `etc/udev/rules.d/70-nicehck.rules`，正是 `services.udev.packages`
+扫描的位置。
 
 ```nix
 {
-  services.udev.packages = [
-    inputs.nicehck-linux.packages.${pkgs.system}.udevRules   # ← 不是 .default
-  ];
-
-  environment.systemPackages = [
-    inputs.nicehck-linux.packages.${pkgs.system}.default
-  ];
+  # 规则和程序来自同一个包
+  services.udev.packages = [ inputs.nicehck-linux.packages.${pkgs.system}.default ];
+  environment.systemPackages = [ inputs.nicehck-linux.packages.${pkgs.system}.default ];
 }
 ```
 
+两个开关也可以分开用（例如只授权、不把程序装进 PATH）：
+
+```nix
+programs.nicehck.udevRules = true;    # 只应用权限规则
+programs.nicehck.install   = false;   # 不装 nicehck / nicehck-gui
+```
+
+> `packages.udevRules` 作为别名保留，指向同一个 store 路径。
+
 ## 权限
 
-`/dev/hidraw*` 默认是 `root:root 0600`，非 root 用户直接打不开。装自带的 udev 规则：
+`/dev/hidraw*` 默认是 `root:root 0600`，非 root 用户直接打不开。
+
+### NixOS 用户
+
+用上面的 `programs.nicehck.udevRules = true`，或用裸 Nix：
+
+```nix
+services.udev.packages = [ inputs.nicehck-linux.packages.${pkgs.system}.default ];
+```
+
+**不要**按下面的手动方式 `cp`：NixOS 的 `/etc/udev/rules.d` 是指向
+`/nix/store/…-udev-rules` 的**只读软链**，写入会直接报错。
+
+### 其它发行版
 
 ```bash
 sudo cp udev/70-nicehck.rules /etc/udev/rules.d/
 sudo udevadm control --reload-rules && sudo udevadm trigger
 ```
 
+### 临时试一下（不改任何配置）
+
+```bash
+sudo setfacl -m u:$USER:rw /dev/hidraw3
+```
+
+立即生效，但拔插或重启后失效，需要重跑。
+
+### 原理与注意事项
+
 规则用 `TAG+="uaccess"`：systemd-logind 会给**占用当前 seat 的登录用户**加 ACL，
 因此**不需要**加组、也不需要重新登录，插拔一次耳机即可。
 
-原理与注意事项：
-
 - 规则文件名必须是 `70-` 前缀。真正执行 uaccess 的是 `73-seat-late.rules`，
-  udev 按文件名字典序处理，排在它后面就来不及了。
+  udev 按文件名字典序处理，排在它后面就来不及了。经实测：
+  `70-nicehck.rules` 排在第 380 行、`73-seat-late.rules` 在第 385 行；
+  而 `services.udev.extraRules` 会写成 `99-local.rules`（第 436 行），
+  **对这种"先打标签、后消费标签"的规则无效**。
 - 文件里那条 `GROUP="users"` 是**注释掉的**。udev 无法表达"仅在缺少 logind 时生效"，
   一旦启用就会在所有系统上生效；而 NixOS 的 `users` 组（gid 100）包含所有普通账户，
   权限面比 uaccess 宽。真有需要请换成专用组。
+
 - 规则还顺手关掉了该设备的 USB autosuspend。挂起帧会让 HID 端点丢回复，
   表现为命令超时，看起来和"设备坏了"一模一样。
 
@@ -177,7 +206,7 @@ crates/nicehck-gui/         图形界面（egui）
   src/curve.rs              频响曲线计算
 udev/70-nicehck.rules       udev 规则
 docs/PROTOCOL.md            协议逆向记录
-flake.nix                   Nix 打包；另导出 udevRules 包与 nixosModules.default
+flake.nix                   Nix 打包；udev 规则随主包分发，另有 nixosModules.default
 ```
 
 产物不使用外部数据文件：设备配置表在编译期嵌入，运行时不读磁盘。
