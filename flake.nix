@@ -45,11 +45,20 @@
 
             # The GUI dlopen()s GL/wayland at runtime, so point it at the store
             # paths explicitly rather than relying on the ambient environment.
+            #
+            # The udev rule ships inside this same package, under
+            # etc/udev/rules.d/, which is where `services.udev.packages` looks.
+            # Keeping it here means `services.udev.packages = [ nicehck-linux ]`
+            # just works: there is no second package to discover, and no way to
+            # pick the binaries without also getting the permissions rule.
             postInstall = ''
               for prog in nicehck nicehck-gui; do
                 wrapProgram "$out/bin/$prog" \
                   --prefix LD_LIBRARY_PATH : "${lib.makeLibraryPath runtimeLibs}"
               done
+
+              install -Dm644 ${./udev/70-nicehck.rules} \
+                "$out/etc/udev/rules.d/70-nicehck.rules"
             '';
 
             # The suite reads /sys/class/hidraw and /dev, which are absent or
@@ -64,26 +73,22 @@
               mainProgram = "nicehck-gui";
             };
           };
-
-          # `services.udev.packages` scans each package for
-          # {etc,lib}/udev/rules.d/*.rules, so the rules need their own derivation.
-          # Passing the binary package there would silently grant nothing.
-          udevRules = pkgs.runCommand "nicehck-udev-rules" { } ''
-            install -Dm644 ${./udev/70-nicehck.rules} \
-              "$out/etc/udev/rules.d/70-nicehck.rules"
-          '';
         in
         {
           default = nicehck-linux;
           nicehck-linux = nicehck-linux;
-          inherit udevRules;
+
+          # Kept as an alias so existing setups that referenced the separate
+          # rules package keep evaluating. The rules physically live in the main
+          # package now, so this just re-exports the same store path.
+          udevRules = nicehck-linux;
         });
 
       apps = forAllSystems (pkgs:
         let
           default = {
             type = "app";
-            program = "${self.packages.${pkgs.system}.default}/bin/nicehck-gui";
+            program = "${self.packages.${pkgs.stdenv.hostPlatform.system}.default}/bin/nicehck-gui";
           };
         in
         {
@@ -91,12 +96,14 @@
           gui = default;
           cli = {
             type = "app";
-            program = "${self.packages.${pkgs.system}.default}/bin/nicehck";
+            program = "${self.packages.${pkgs.stdenv.hostPlatform.system}.default}/bin/nicehck";
           };
         });
 
-      # Two independent switches, because the permission rule and the binaries are
-      # separate concerns: someone building from source only wants the udev rule.
+      # Because the udev rule ships inside the main package, granting permission
+      # and installing the binaries are two uses of the *same* derivation. The
+      # switches stay separate only so you can grant access without putting the
+      # tools on PATH (e.g. when running from a build tree).
       #
       #   programs.nicehck.udevRules = true;   # grant hidraw access
       #   programs.nicehck.install   = true;   # also put the binaries on PATH
@@ -109,7 +116,7 @@
             default = config.programs.nicehck.enable;
             defaultText = lib.literalExpression "config.programs.nicehck.enable";
             description = ''
-              Install the udev rule that lets the logged-in user reach the
+              Apply the udev rule that lets the logged-in user reach the
               headset's vendor HID interface, so no sudo and no manual `cp` is
               needed. This alone is enough if you run the tool from a build tree.
             '';
@@ -126,9 +133,12 @@
         };
 
         config = {
+          # NixOS scans this package for etc/udev/rules.d/*.rules and copies the
+          # rule into the system's rules directory, where it sorts before
+          # 73-seat-late.rules, which is what actually applies the uaccess ACL.
           services.udev.packages =
             lib.mkIf config.programs.nicehck.udevRules
-              [ self.packages.${pkgs.stdenv.hostPlatform.system}.udevRules ];
+              [ self.packages.${pkgs.stdenv.hostPlatform.system}.default ];
 
           environment.systemPackages =
             lib.mkIf config.programs.nicehck.install
