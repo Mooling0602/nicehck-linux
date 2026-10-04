@@ -257,8 +257,11 @@ impl NicehckApp {
                 let _ = tx.send(IoResult::Error("Not connected.".into()));
                 return;
             };
-            match dev.request(&reports, IO_TIMEOUT) {
-                Ok(_) => {
+            // Write commands are fire-and-forget: the device does not reply,
+            // so we must not use `request()` (which waits for replies and
+            // would always time out here).
+            match dev.write_reports(&reports, Duration::from_millis(20)) {
+                Ok(()) => {
                     let _ = tx.send(IoResult::Applied {
                         reports: reports.len(),
                     });

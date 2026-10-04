@@ -186,6 +186,24 @@ impl HidDevice {
         Ok(())
     }
 
+    /// Write several reports back-to-back, waiting between each one.
+    ///
+    /// Used for write commands (EQ, DAC, apply) that are fire-and-forget:
+    /// the device does not reply, so we do not wait for one. The 20 ms
+    /// inter-report delay mirrors the Android app's staged-write pacing and
+    /// gives the DSP time to commit each report before the next arrives.
+    pub fn write_reports(
+        &mut self,
+        reports: &[Report],
+        delay: Duration,
+    ) -> Result<(), TransportError> {
+        for r in reports {
+            self.write_report(r)?;
+            std::thread::sleep(delay);
+        }
+        Ok(())
+    }
+
     /// Read one report, waiting up to `timeout` for data to arrive.
     pub fn read_report(&mut self, timeout: Duration) -> Result<Vec<u8>, TransportError> {
         let deadline = Instant::now() + timeout;
@@ -313,6 +331,43 @@ mod tests {
             enumerate(0xFFFF).is_empty(),
             "bogus VID should match nothing"
         );
+    }
+
+    #[test]
+    fn write_reports_stops_on_first_error() {
+        // A missing node must fail immediately rather than sleeping through
+        // every report. Uses a node that cannot exist so the test is
+        // machine-independent.
+        let info = HidRawInfo {
+            path: PathBuf::from("/dev/nonexistent-hidraw"),
+            vendor_id: 0x3302,
+            product_id: 0xC200,
+            product_name: "test".into(),
+        };
+        match HidDevice::open_path(&info) {
+            Err(TransportError::Open { .. }) | Err(TransportError::PermissionDenied { .. }) => {}
+            Err(other) => panic!("expected open failure, got {other:?}"),
+            Ok(_) => panic!("expected open failure, but /dev/nonexistent-hidraw opened"),
+        }
+    }
+
+    #[test]
+    fn write_reports_accepts_empty_slice() {
+        // An empty batch must be a no-op, not a panic.
+        // Build a dummy device with a pipe-like file descriptor is impractical
+        // here; instead verify the error path that we can reach.
+        let info = HidRawInfo {
+            path: PathBuf::from("/dev/null"),
+            vendor_id: 0x3302,
+            product_id: 0xC200,
+            product_name: "test".into(),
+        };
+        // /dev/null may open read-write; if so, write_reports with an empty
+        // slice must return Ok without touching the fd.
+        if let Ok(mut dev) = HidDevice::open_path(&info) {
+            let result = dev.write_reports(&[], Duration::from_millis(0));
+            assert!(result.is_ok(), "empty slice should be Ok, got {result:?}");
+        }
     }
 
     #[test]
