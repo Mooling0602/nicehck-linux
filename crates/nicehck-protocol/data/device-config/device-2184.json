@@ -1,0 +1,27 @@
+{
+  "revision": 1,
+  "device": {
+    "id": 2184,
+    "name": "USB20",
+    "customName": "USB OTA",
+    "tag": "NICEHCK OTA Device",
+    "imageUrl": [],
+    "previewImageUrl": [],
+    "remoteImageUrl": [],
+    "remotePreviewImageUrl": [],
+    "runtime": {
+      "transport": "usb",
+      "controllerKind": "ota",
+      "protocolVariant": "nk_ota_v1",
+      "identity": {
+        "bluetoothNames": [],
+        "vendorId": 1638,
+        "productId": 2184,
+        "serviceUuid": null,
+        "writeCharacteristicUuid": null,
+        "notifyCharacteristicUuid": null
+      }
+    }
+  },
+  "features": []
+}

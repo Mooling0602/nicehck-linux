@@ -1,0 +1,94 @@
+{
+  "revision": 1,
+  "device": {
+    "id": 5525,
+    "name": "NK1",
+    "customName": "NK1",
+    "tag": "YUANDAO DSP Device",
+    "imageUrl": [
+      "images/device/nk1.png"
+    ],
+    "previewImageUrl": [
+      "images/device/nk1.png"
+    ],
+    "remoteImageUrl": [
+      "https://bucket.nicehck.cn/images/device/nk1.png"
+    ],
+    "remotePreviewImageUrl": [
+      "https://bucket.nicehck.cn/images/device/nk1.png"
+    ],
+    "runtime": {
+      "transport": "usb",
+      "controllerKind": "info",
+      "protocolVariant": "ttgk_info_v1",
+      "identity": {
+        "bluetoothNames": [],
+        "vendorId": 13058,
+        "productId": 5525,
+        "serviceUuid": null,
+        "writeCharacteristicUuid": null,
+        "notifyCharacteristicUuid": null
+      }
+    }
+  },
+  "features": [
+    {
+      "key": "usb.info",
+      "behaviorVariant": "default",
+      "priority": 1,
+      "availability": {
+        "kind": "baseline",
+        "minFirmware": null,
+        "maxFirmware": null
+      },
+      "parameters": {
+        "adc": {
+          "sampleRates": [
+            "8.0kHz",
+            "16.0kHz",
+            "32.0kHz",
+            "44.1kHz",
+            "48.0kHz",
+            "96.0kHz"
+          ],
+          "channelBitDepths": [
+            "1ch / 16bit",
+            "1ch / 24bit"
+          ]
+        },
+        "dac": {
+          "format": "PCM",
+          "sampleRates": [
+            "8.0kHz",
+            "16.0kHz",
+            "32.0kHz",
+            "44.1kHz",
+            "48.0kHz",
+            "96.0kHz",
+            "192.0kHz",
+            "384.0kHz"
+          ],
+          "channelBitDepths": [
+            "2ch / 16bit",
+            "2ch / 24bit",
+            "2ch / 32bit"
+          ]
+        }
+      }
+    },
+    {
+      "key": "usb.device_info",
+      "behaviorVariant": "default",
+      "priority": 1,
+      "availability": {
+        "kind": "baseline",
+        "minFirmware": null,
+        "maxFirmware": null
+      },
+      "parameters": {
+        "chipModel": "CX31993+MAX97220",
+        "uacVersion": "UAC2.0"
+      }
+    }
+  ]
+}

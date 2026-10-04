@@ -1,0 +1,19 @@
+[package]
+name = "nicehck-gui"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Native GUI for NICEHCK / YUANDAO USB-C DSP earphones on Linux"
+
+[[bin]]
+name = "nicehck-gui"
+path = "src/main.rs"
+
+[dependencies]
+nicehck-protocol = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+anyhow = { workspace = true }
+eframe = { workspace = true }
+egui = { workspace = true }
+egui_plot = { workspace = true }

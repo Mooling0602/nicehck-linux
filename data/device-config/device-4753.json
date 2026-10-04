@@ -1,0 +1,477 @@
+{
+  "revision": 1,
+  "device": {
+    "id": 4753,
+    "name": "StringSnow",
+    "customName": "StringSnow",
+    "tag": "YUANDAO DSP Device",
+    "imageUrl": [
+      "images/device/string-snow-black-detail.png"
+    ],
+    "previewImageUrl": [
+      "images/device/string-snow-black-preview.png"
+    ],
+    "remoteImageUrl": [
+      "https://bucket.nicehck.cn/images/device/string-snow-black-detail.png"
+    ],
+    "remotePreviewImageUrl": [
+      "https://bucket.nicehck.cn/images/device/string-snow-black-preview.png"
+    ],
+    "runtime": {
+      "transport": "usb",
+      "controllerKind": "control",
+      "protocolVariant": "ttgk_v1",
+      "identity": {
+        "bluetoothNames": [],
+        "vendorId": 13058,
+        "productId": 4753,
+        "serviceUuid": null,
+        "writeCharacteristicUuid": null,
+        "notifyCharacteristicUuid": null
+      }
+    }
+  },
+  "features": [
+    {
+      "key": "usb.equalizer",
+      "behaviorVariant": "default",
+      "priority": 1,
+      "availability": {
+        "kind": "baseline",
+        "minFirmware": null,
+        "maxFirmware": null
+      },
+      "parameters": {
+        "minFrequency": 20,
+        "maxFrequency": 20000,
+        "frequencyNumber": 8,
+        "minGain": -12.0,
+        "maxGain": 12.0,
+        "minQValue": 0.2,
+        "maxQValue": 12.0,
+        "minOffset": -12.0,
+        "maxOffset": 8.0,
+        "sampleRate": 96000.0,
+        "presets": [
+          {
+            "presetKey": "default",
+            "presetIndex": 1,
+            "offset": 0.0,
+            "modeType": null,
+            "description": "",
+            "descriptionI18n": {},
+            "nameI18n": {
+              "en": "Default",
+              "ko": "표준",
+              "zh": "默认",
+              "ja": "標準モード"
+            },
+            "bands": [
+              {
+                "bandIndex": 0,
+                "frequency": 20,
+                "gain": 1.5,
+                "qValue": 2.0
+              },
+              {
+                "bandIndex": 1,
+                "frequency": 500,
+                "gain": 1.1,
+                "qValue": 0.5
+              },
+              {
+                "bandIndex": 2,
+                "frequency": 2300,
+                "gain": -5.0,
+                "qValue": 1.5
+              },
+              {
+                "bandIndex": 3,
+                "frequency": 4500,
+                "gain": 2.5,
+                "qValue": 2.7
+              },
+              {
+                "bandIndex": 4,
+                "frequency": 7000,
+                "gain": 1.5,
+                "qValue": 1.5
+              },
+              {
+                "bandIndex": 5,
+                "frequency": 8800,
+                "gain": 4.5,
+                "qValue": 3.8
+              },
+              {
+                "bandIndex": 6,
+                "frequency": 12500,
+                "gain": -4.0,
+                "qValue": 4.5
+              },
+              {
+                "bandIndex": 7,
+                "frequency": 14500,
+                "gain": 2.0,
+                "qValue": 4.0
+              }
+            ]
+          },
+          {
+            "presetKey": "tears",
+            "presetIndex": 2,
+            "offset": 0.0,
+            "modeType": null,
+            "description": " ",
+            "descriptionI18n": {},
+            "nameI18n": {
+              "en": "Tears",
+              "ko": "후회의 눈물",
+              "zh": "悔恨之泪",
+              "ja": "悔恨の涙"
+            },
+            "bands": [
+              {
+                "bandIndex": 0,
+                "frequency": 32,
+                "gain": 1.8,
+                "qValue": 0.5
+              },
+              {
+                "bandIndex": 1,
+                "frequency": 150,
+                "gain": -1.1,
+                "qValue": 2.0
+              },
+              {
+                "bandIndex": 2,
+                "frequency": 160,
+                "gain": 0.6,
+                "qValue": 0.8
+              },
+              {
+                "bandIndex": 3,
+                "frequency": 330,
+                "gain": 2.6,
+                "qValue": 0.5
+              },
+              {
+                "bandIndex": 4,
+                "frequency": 460,
+                "gain": -1.4,
+                "qValue": 2.0
+              },
+              {
+                "bandIndex": 5,
+                "frequency": 2250,
+                "gain": -3.4,
+                "qValue": 2.4
+              },
+              {
+                "bandIndex": 6,
+                "frequency": 5700,
+                "gain": 1.7,
+                "qValue": 2.5
+              },
+              {
+                "bandIndex": 7,
+                "frequency": 15000,
+                "gain": 3.6,
+                "qValue": 1.0
+              }
+            ]
+          },
+          {
+            "presetKey": "JM_1",
+            "presetIndex": 3,
+            "offset": 0.0,
+            "modeType": null,
+            "description": " ",
+            "descriptionI18n": {},
+            "nameI18n": {
+              "en": "Balanced",
+              "ko": "균형 잡힌 뉴트럴",
+              "zh": "均衡中正",
+              "ja": "バランス良くニュートラル"
+            },
+            "bands": [
+              {
+                "bandIndex": 0,
+                "frequency": 62,
+                "gain": 2.9,
+                "qValue": 0.7
+              },
+              {
+                "bandIndex": 1,
+                "frequency": 340,
+                "gain": 0.4,
+                "qValue": 2.0
+              },
+              {
+                "bandIndex": 2,
+                "frequency": 460,
+                "gain": 3.2,
+                "qValue": 0.5
+              },
+              {
+                "bandIndex": 3,
+                "frequency": 1100,
+                "gain": -0.9,
+                "qValue": 2.0
+              },
+              {
+                "bandIndex": 4,
+                "frequency": 2300,
+                "gain": -8.7,
+                "qValue": 1.1
+              },
+              {
+                "bandIndex": 5,
+                "frequency": 3000,
+                "gain": 6.7,
+                "qValue": 1.5
+              },
+              {
+                "bandIndex": 6,
+                "frequency": 6000,
+                "gain": 1.7,
+                "qValue": 6.2
+              },
+              {
+                "bandIndex": 7,
+                "frequency": 10000,
+                "gain": 0.7,
+                "qValue": 0.5
+              }
+            ]
+          },
+          {
+            "presetKey": "harman",
+            "presetIndex": 4,
+            "offset": 0.0,
+            "modeType": null,
+            "description": " ",
+            "descriptionI18n": {},
+            "nameI18n": {
+              "en": "Rock",
+              "ko": "일렉트로닉 록",
+              "zh": "欧美澎湃",
+              "ja": "欧米パワフル"
+            },
+            "bands": [
+              {
+                "bandIndex": 0,
+                "frequency": 52,
+                "gain": 2.4,
+                "qValue": 0.7
+              },
+              {
+                "bandIndex": 1,
+                "frequency": 160,
+                "gain": 0.7,
+                "qValue": 2.0
+              },
+              {
+                "bandIndex": 2,
+                "frequency": 370,
+                "gain": 1.7,
+                "qValue": 2.0
+              },
+              {
+                "bandIndex": 3,
+                "frequency": 760,
+                "gain": 1.5,
+                "qValue": 2.0
+              },
+              {
+                "bandIndex": 4,
+                "frequency": 1200,
+                "gain": -0.8,
+                "qValue": 2.0
+              },
+              {
+                "bandIndex": 5,
+                "frequency": 2200,
+                "gain": -7.1,
+                "qValue": 1.3
+              },
+              {
+                "bandIndex": 6,
+                "frequency": 6100,
+                "gain": 7.9,
+                "qValue": 0.6
+              },
+              {
+                "bandIndex": 7,
+                "frequency": 12000,
+                "gain": -6.2,
+                "qValue": 2.0
+              }
+            ]
+          },
+          {
+            "presetKey": "game",
+            "presetIndex": 5,
+            "offset": 0.0,
+            "modeType": "GameModeSwitch",
+            "description": " ",
+            "descriptionI18n": {},
+            "nameI18n": {
+              "en": "Game",
+              "ko": "게임 모드",
+              "zh": "游戏",
+              "ja": "ゲームモード"
+            },
+            "bands": [
+              {
+                "bandIndex": 0,
+                "frequency": 20,
+                "gain": -2.0,
+                "qValue": 0.2
+              },
+              {
+                "bandIndex": 1,
+                "frequency": 200,
+                "gain": -0.8,
+                "qValue": 1.35
+              },
+              {
+                "bandIndex": 2,
+                "frequency": 330,
+                "gain": 0.6,
+                "qValue": 1.31
+              },
+              {
+                "bandIndex": 3,
+                "frequency": 1500,
+                "gain": 0.1,
+                "qValue": 1.73
+              },
+              {
+                "bandIndex": 4,
+                "frequency": 2300,
+                "gain": -3.7,
+                "qValue": 1.96
+              },
+              {
+                "bandIndex": 5,
+                "frequency": 4500,
+                "gain": -1.2,
+                "qValue": 0.2
+              },
+              {
+                "bandIndex": 6,
+                "frequency": 6000,
+                "gain": -1.2,
+                "qValue": 1.38
+              },
+              {
+                "bandIndex": 7,
+                "frequency": 16000,
+                "gain": 4.2,
+                "qValue": 4.2
+              }
+            ]
+          },
+          {
+            "presetKey": "sleep",
+            "presetIndex": 6,
+            "offset": 0.0,
+            "modeType": "SleepMode",
+            "description": " ",
+            "descriptionI18n": {},
+            "nameI18n": {
+              "en": "Sleep",
+              "ko": "절전 모드",
+              "zh": "睡眠",
+              "ja": "スリープモード"
+            },
+            "bands": [
+              {
+                "bandIndex": 0,
+                "frequency": 20,
+                "gain": 1.5,
+                "qValue": 2.0
+              },
+              {
+                "bandIndex": 1,
+                "frequency": 400,
+                "gain": 1.5,
+                "qValue": 0.7
+              },
+              {
+                "bandIndex": 2,
+                "frequency": 1000,
+                "gain": 0.5,
+                "qValue": 0.5
+              },
+              {
+                "bandIndex": 3,
+                "frequency": 2300,
+                "gain": -10.0,
+                "qValue": 1.5
+              },
+              {
+                "bandIndex": 4,
+                "frequency": 4500,
+                "gain": -2.5,
+                "qValue": 2.7
+              },
+              {
+                "bandIndex": 5,
+                "frequency": 7000,
+                "gain": 5.0,
+                "qValue": 2.0
+              },
+              {
+                "bandIndex": 6,
+                "frequency": 8800,
+                "gain": -6.0,
+                "qValue": 3.5
+              },
+              {
+                "bandIndex": 7,
+                "frequency": 12500,
+                "gain": -8.0,
+                "qValue": 4.5
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "key": "usb.special_mode",
+      "behaviorVariant": "default",
+      "priority": 2,
+      "availability": {
+        "kind": "baseline",
+        "minFirmware": null,
+        "maxFirmware": null
+      },
+      "parameters": {}
+    },
+    {
+      "key": "usb.game_mode",
+      "behaviorVariant": "default",
+      "priority": 3,
+      "availability": {
+        "kind": "baseline",
+        "minFirmware": null,
+        "maxFirmware": null
+      },
+      "parameters": {}
+    },
+    {
+      "key": "usb.sleep_mode",
+      "behaviorVariant": "default",
+      "priority": 4,
+      "availability": {
+        "kind": "baseline",
+        "minFirmware": null,
+        "maxFirmware": null
+      },
+      "parameters": {}
+    }
+  ]
+}

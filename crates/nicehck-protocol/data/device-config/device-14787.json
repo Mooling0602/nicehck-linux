@@ -1,0 +1,408 @@
+{
+  "revision": 1,
+  "device": {
+    "id": 14787,
+    "name": "NICEHCK Octave",
+    "customName": "Octave",
+    "tag": "NICEHCK DSP Device",
+    "imageUrl": [
+      "images/device/octave-detail.png"
+    ],
+    "previewImageUrl": [
+      "images/device/octave-preview.png"
+    ],
+    "remoteImageUrl": [
+      "https://bucket.nicehck.cn/images/device/octave-detail.png"
+    ],
+    "remotePreviewImageUrl": [
+      "https://bucket.nicehck.cn/images/device/octave-preview.png"
+    ],
+    "runtime": {
+      "transport": "usb",
+      "controllerKind": "control",
+      "protocolVariant": "ttgk_v1",
+      "identity": {
+        "bluetoothNames": [],
+        "vendorId": 13058,
+        "productId": 14787,
+        "serviceUuid": null,
+        "writeCharacteristicUuid": null,
+        "notifyCharacteristicUuid": null
+      }
+    }
+  },
+  "features": [
+    {
+      "key": "usb.equalizer",
+      "behaviorVariant": "default",
+      "priority": 1,
+      "availability": {
+        "kind": "baseline",
+        "minFirmware": null,
+        "maxFirmware": null
+      },
+      "parameters": {
+        "minFrequency": 20,
+        "maxFrequency": 20000,
+        "frequencyNumber": 10,
+        "minGain": -12.0,
+        "maxGain": 12.0,
+        "minQValue": 0.2,
+        "maxQValue": 12.0,
+        "minOffset": -12.0,
+        "maxOffset": 8.0,
+        "sampleRate": 96000.0,
+        "presets": [
+          {
+            "presetKey": "default",
+            "presetIndex": 1,
+            "offset": 0.0,
+            "modeType": null,
+            "description": "",
+            "descriptionI18n": {},
+            "nameI18n": {
+              "en": "Balanced",
+              "ko": "균형 잡힌 뉴트럴",
+              "zh": "均衡中正",
+              "ja": "バランス良くニュートラル"
+            },
+            "bands": [
+              {
+                "bandIndex": 0,
+                "frequency": 20,
+                "gain": 0.0,
+                "qValue": 0.75
+              },
+              {
+                "bandIndex": 1,
+                "frequency": 50,
+                "gain": 0.0,
+                "qValue": 0.75
+              },
+              {
+                "bandIndex": 2,
+                "frequency": 100,
+                "gain": 0.0,
+                "qValue": 0.75
+              },
+              {
+                "bandIndex": 3,
+                "frequency": 200,
+                "gain": 0.0,
+                "qValue": 0.75
+              },
+              {
+                "bandIndex": 4,
+                "frequency": 4500,
+                "gain": 0.0,
+                "qValue": 0.75
+              },
+              {
+                "bandIndex": 5,
+                "frequency": 7000,
+                "gain": 0.0,
+                "qValue": 0.75
+              },
+              {
+                "bandIndex": 6,
+                "frequency": 8000,
+                "gain": 0.0,
+                "qValue": 0.75
+              },
+              {
+                "bandIndex": 7,
+                "frequency": 12500,
+                "gain": 0.0,
+                "qValue": 0.75
+              },
+              {
+                "bandIndex": 8,
+                "frequency": 15000,
+                "gain": 0.0,
+                "qValue": 0.75
+              },
+              {
+                "bandIndex": 9,
+                "frequency": 18000,
+                "gain": 0.0,
+                "qValue": 0.75
+              }
+            ]
+          },
+          {
+            "presetKey": "rock",
+            "presetIndex": 2,
+            "offset": 0.0,
+            "modeType": null,
+            "description": "",
+            "descriptionI18n": {},
+            "nameI18n": {
+              "en": "Rock",
+              "ko": "록",
+              "zh": "摇滚",
+              "ja": "ロック"
+            },
+            "bands": [
+              {
+                "bandIndex": 0,
+                "frequency": 30,
+                "gain": 2.0,
+                "qValue": 0.5
+              },
+              {
+                "bandIndex": 1,
+                "frequency": 100,
+                "gain": 1.5,
+                "qValue": 0.5
+              },
+              {
+                "bandIndex": 2,
+                "frequency": 200,
+                "gain": 1.5,
+                "qValue": 0.5
+              },
+              {
+                "bandIndex": 3,
+                "frequency": 500,
+                "gain": 0.5,
+                "qValue": 0.75
+              },
+              {
+                "bandIndex": 4,
+                "frequency": 900,
+                "gain": -1.0,
+                "qValue": 0.75
+              },
+              {
+                "bandIndex": 5,
+                "frequency": 2500,
+                "gain": 1.5,
+                "qValue": 1.5
+              },
+              {
+                "bandIndex": 6,
+                "frequency": 3800,
+                "gain": 2.0,
+                "qValue": 0.75
+              },
+              {
+                "bandIndex": 7,
+                "frequency": 7500,
+                "gain": -2.0,
+                "qValue": 1.5
+              },
+              {
+                "bandIndex": 8,
+                "frequency": 10000,
+                "gain": 0.5,
+                "qValue": 0.75
+              },
+              {
+                "bandIndex": 9,
+                "frequency": 13000,
+                "gain": 1.5,
+                "qValue": 0.6
+              }
+            ]
+          },
+          {
+            "presetKey": "instrumental",
+            "presetIndex": 3,
+            "offset": 0.0,
+            "modeType": null,
+            "description": "",
+            "descriptionI18n": {},
+            "nameI18n": {
+              "en": "Instrumental",
+              "ko": "기악",
+              "zh": "器乐",
+              "ja": "インストゥルメンタル"
+            },
+            "bands": [
+              {
+                "bandIndex": 0,
+                "frequency": 20,
+                "gain": 2.0,
+                "qValue": 0.5
+              },
+              {
+                "bandIndex": 1,
+                "frequency": 50,
+                "gain": 2.0,
+                "qValue": 0.5
+              },
+              {
+                "bandIndex": 2,
+                "frequency": 200,
+                "gain": 1.0,
+                "qValue": 0.75
+              },
+              {
+                "bandIndex": 3,
+                "frequency": 500,
+                "gain": -0.5,
+                "qValue": 0.75
+              },
+              {
+                "bandIndex": 4,
+                "frequency": 800,
+                "gain": -1.5,
+                "qValue": 1.0
+              },
+              {
+                "bandIndex": 5,
+                "frequency": 1700,
+                "gain": -0.5,
+                "qValue": 0.5
+              },
+              {
+                "bandIndex": 6,
+                "frequency": 2700,
+                "gain": 0.5,
+                "qValue": 0.75
+              },
+              {
+                "bandIndex": 7,
+                "frequency": 4500,
+                "gain": 2.5,
+                "qValue": 0.75
+              },
+              {
+                "bandIndex": 8,
+                "frequency": 6500,
+                "gain": 2.5,
+                "qValue": 0.75
+              },
+              {
+                "bandIndex": 9,
+                "frequency": 18000,
+                "gain": -1.0,
+                "qValue": 0.6
+              }
+            ]
+          },
+          {
+            "presetKey": "vocal",
+            "presetIndex": 4,
+            "offset": 0.0,
+            "modeType": null,
+            "description": "",
+            "descriptionI18n": {},
+            "nameI18n": {
+              "en": "Vocal",
+              "ko": "보컬",
+              "zh": "人声",
+              "ja": "ボーカル"
+            },
+            "bands": [
+              {
+                "bandIndex": 0,
+                "frequency": 20,
+                "gain": 1.5,
+                "qValue": 0.5
+              },
+              {
+                "bandIndex": 1,
+                "frequency": 50,
+                "gain": 1.0,
+                "qValue": 0.5
+              },
+              {
+                "bandIndex": 2,
+                "frequency": 200,
+                "gain": 0.5,
+                "qValue": 0.75
+              },
+              {
+                "bandIndex": 3,
+                "frequency": 500,
+                "gain": -0.5,
+                "qValue": 0.75
+              },
+              {
+                "bandIndex": 4,
+                "frequency": 800,
+                "gain": -1.5,
+                "qValue": 1.0
+              },
+              {
+                "bandIndex": 5,
+                "frequency": 1700,
+                "gain": -2.0,
+                "qValue": 0.75
+              },
+              {
+                "bandIndex": 6,
+                "frequency": 2700,
+                "gain": 1.5,
+                "qValue": 0.75
+              },
+              {
+                "bandIndex": 7,
+                "frequency": 4500,
+                "gain": 2.0,
+                "qValue": 0.75
+              },
+              {
+                "bandIndex": 8,
+                "frequency": 6500,
+                "gain": -3.0,
+                "qValue": 1.5
+              },
+              {
+                "bandIndex": 9,
+                "frequency": 18000,
+                "gain": -1.5,
+                "qValue": 0.6
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "key": "usb.digital_filter",
+      "behaviorVariant": "default",
+      "priority": 2,
+      "availability": {
+        "kind": "baseline",
+        "minFirmware": null,
+        "maxFirmware": null
+      },
+      "parameters": {}
+    },
+    {
+      "key": "usb.microphone_gain",
+      "behaviorVariant": "default",
+      "priority": 4,
+      "availability": {
+        "kind": "baseline",
+        "minFirmware": null,
+        "maxFirmware": null
+      },
+      "parameters": {}
+    },
+    {
+      "key": "usb.channel_balance",
+      "behaviorVariant": "default",
+      "priority": 5,
+      "availability": {
+        "kind": "baseline",
+        "minFirmware": null,
+        "maxFirmware": null
+      },
+      "parameters": {}
+    },
+    {
+      "key": "usb.ota",
+      "behaviorVariant": "default",
+      "priority": 6,
+      "availability": {
+        "kind": "baseline",
+        "minFirmware": null,
+        "maxFirmware": null
+      },
+      "parameters": {}
+    }
+  ]
+}

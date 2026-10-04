@@ -1,0 +1,391 @@
+{
+  "revision": 1,
+  "device": {
+    "id": 4766,
+    "name": "Tears",
+    "customName": "Tears",
+    "tag": "YUANDAO DSP Device",
+    "imageUrl": [
+      "images/device/tears.png"
+    ],
+    "previewImageUrl": [
+      "images/device/tears.png"
+    ],
+    "remoteImageUrl": [
+      "https://bucket.nicehck.cn/images/device/tears.png"
+    ],
+    "remotePreviewImageUrl": [
+      "https://bucket.nicehck.cn/images/device/tears.png"
+    ],
+    "runtime": {
+      "transport": "usb",
+      "controllerKind": "control",
+      "protocolVariant": "ttgk_v1",
+      "identity": {
+        "bluetoothNames": [],
+        "vendorId": 13058,
+        "productId": 4766,
+        "serviceUuid": null,
+        "writeCharacteristicUuid": null,
+        "notifyCharacteristicUuid": null
+      }
+    }
+  },
+  "features": [
+    {
+      "key": "usb.equalizer",
+      "behaviorVariant": "default",
+      "priority": 1,
+      "availability": {
+        "kind": "baseline",
+        "minFirmware": null,
+        "maxFirmware": null
+      },
+      "parameters": {
+        "minFrequency": 20,
+        "maxFrequency": 20000,
+        "frequencyNumber": 8,
+        "minGain": -12.0,
+        "maxGain": 12.0,
+        "minQValue": 0.2,
+        "maxQValue": 12.0,
+        "minOffset": -12.0,
+        "maxOffset": 8.0,
+        "sampleRate": 96000.0,
+        "presets": [
+          {
+            "presetKey": "tears",
+            "presetIndex": 1,
+            "offset": 0.0,
+            "modeType": null,
+            "description": "",
+            "descriptionI18n": {},
+            "nameI18n": {
+              "en": "Tears",
+              "ko": "후회의 눈물",
+              "zh": "悔恨之泪",
+              "ja": "悔恨の涙"
+            },
+            "bands": [
+              {
+                "bandIndex": 0,
+                "frequency": 20,
+                "gain": 0.0,
+                "qValue": 0.75
+              },
+              {
+                "bandIndex": 1,
+                "frequency": 200,
+                "gain": 0.0,
+                "qValue": 0.75
+              },
+              {
+                "bandIndex": 2,
+                "frequency": 750,
+                "gain": 0.0,
+                "qValue": 0.75
+              },
+              {
+                "bandIndex": 3,
+                "frequency": 1000,
+                "gain": 0.0,
+                "qValue": 0.75
+              },
+              {
+                "bandIndex": 4,
+                "frequency": 2000,
+                "gain": 0.0,
+                "qValue": 0.75
+              },
+              {
+                "bandIndex": 5,
+                "frequency": 3000,
+                "gain": 0.0,
+                "qValue": 0.75
+              },
+              {
+                "bandIndex": 6,
+                "frequency": 4000,
+                "gain": 0.0,
+                "qValue": 0.75
+              },
+              {
+                "bandIndex": 7,
+                "frequency": 7000,
+                "gain": 0.0,
+                "qValue": 0.75
+              }
+            ]
+          },
+          {
+            "presetKey": "balanced",
+            "presetIndex": 2,
+            "offset": 0.0,
+            "modeType": null,
+            "description": " ",
+            "descriptionI18n": {},
+            "nameI18n": {
+              "en": "Balanced",
+              "ko": "균형 잡힌 뉴트럴",
+              "zh": "均衡中正",
+              "ja": "バランス良くニュートラル"
+            },
+            "bands": [
+              {
+                "bandIndex": 0,
+                "frequency": 22,
+                "gain": -1.6,
+                "qValue": 1.3
+              },
+              {
+                "bandIndex": 1,
+                "frequency": 72,
+                "gain": 1.2,
+                "qValue": 1.2
+              },
+              {
+                "bandIndex": 2,
+                "frequency": 390,
+                "gain": 2.6,
+                "qValue": 1.6
+              },
+              {
+                "bandIndex": 3,
+                "frequency": 1700,
+                "gain": -2.5,
+                "qValue": 1.2
+              },
+              {
+                "bandIndex": 4,
+                "frequency": 3300,
+                "gain": 2.9,
+                "qValue": 2.0
+              },
+              {
+                "bandIndex": 5,
+                "frequency": 4500,
+                "gain": -3.1,
+                "qValue": 2.0
+              },
+              {
+                "bandIndex": 6,
+                "frequency": 9000,
+                "gain": 4.5,
+                "qValue": 2.0
+              },
+              {
+                "bandIndex": 7,
+                "frequency": 14000,
+                "gain": -2.9,
+                "qValue": 2.0
+              }
+            ]
+          },
+          {
+            "presetKey": "harman",
+            "presetIndex": 3,
+            "offset": 0.0,
+            "modeType": null,
+            "description": " ",
+            "descriptionI18n": {},
+            "nameI18n": {
+              "en": "Rock",
+              "ko": "일렉트로닉 록",
+              "zh": "欧美澎湃",
+              "ja": "欧米パワフル"
+            },
+            "bands": [
+              {
+                "bandIndex": 0,
+                "frequency": 21,
+                "gain": -1.4,
+                "qValue": 1.9
+              },
+              {
+                "bandIndex": 1,
+                "frequency": 240,
+                "gain": -1.6,
+                "qValue": 2.0
+              },
+              {
+                "bandIndex": 2,
+                "frequency": 810,
+                "gain": 0.8,
+                "qValue": 2.0
+              },
+              {
+                "bandIndex": 3,
+                "frequency": 1600,
+                "gain": -2.7,
+                "qValue": 0.9
+              },
+              {
+                "bandIndex": 4,
+                "frequency": 4600,
+                "gain": -3.2,
+                "qValue": 2.0
+              },
+              {
+                "bandIndex": 5,
+                "frequency": 5200,
+                "gain": 4.0,
+                "qValue": 0.8
+              },
+              {
+                "bandIndex": 6,
+                "frequency": 6400,
+                "gain": 4.1,
+                "qValue": 1.4
+              },
+              {
+                "bandIndex": 7,
+                "frequency": 11000,
+                "gain": -3.0,
+                "qValue": 0.8
+              }
+            ]
+          },
+          {
+            "presetKey": "game",
+            "presetIndex": 4,
+            "offset": 0.0,
+            "modeType": "GameModeSwitch",
+            "description": " ",
+            "descriptionI18n": {},
+            "nameI18n": {
+              "en": "Game",
+              "ko": "게임 모드",
+              "zh": "游戏",
+              "ja": "ゲームモード"
+            },
+            "bands": [
+              {
+                "bandIndex": 0,
+                "frequency": 22,
+                "gain": -9.0,
+                "qValue": 1.4
+              },
+              {
+                "bandIndex": 1,
+                "frequency": 200,
+                "gain": 4.0,
+                "qValue": 1.5
+              },
+              {
+                "bandIndex": 2,
+                "frequency": 400,
+                "gain": 2.5,
+                "qValue": 2.0
+              },
+              {
+                "bandIndex": 3,
+                "frequency": 720,
+                "gain": 1.0,
+                "qValue": 2.0
+              },
+              {
+                "bandIndex": 4,
+                "frequency": 1800,
+                "gain": -2.7,
+                "qValue": 1.3
+              },
+              {
+                "bandIndex": 5,
+                "frequency": 3200,
+                "gain": 5.1,
+                "qValue": 2.0
+              },
+              {
+                "bandIndex": 6,
+                "frequency": 4600,
+                "gain": -3.2,
+                "qValue": 2.0
+              },
+              {
+                "bandIndex": 7,
+                "frequency": 8800,
+                "gain": 1.3,
+                "qValue": 2.0
+              }
+            ]
+          },
+          {
+            "presetKey": "diffuse",
+            "presetIndex": 5,
+            "offset": 0.0,
+            "modeType": "DiffuseMode",
+            "description": " ",
+            "descriptionI18n": {},
+            "nameI18n": {
+              "en": "Diffusion",
+              "ko": "레전더리 디퓨전",
+              "zh": "扩散场",
+              "ja": "レジェンドサラウンド"
+            },
+            "bands": [
+              {
+                "bandIndex": 0,
+                "frequency": 210,
+                "gain": -1.5,
+                "qValue": 2.0
+              },
+              {
+                "bandIndex": 1,
+                "frequency": 950,
+                "gain": 2.5,
+                "qValue": 2.0
+              },
+              {
+                "bandIndex": 2,
+                "frequency": 1700,
+                "gain": -5.2,
+                "qValue": 1.4
+              },
+              {
+                "bandIndex": 3,
+                "frequency": 3400,
+                "gain": 1.5,
+                "qValue": 5.0
+              },
+              {
+                "bandIndex": 4,
+                "frequency": 6000,
+                "gain": 3.5,
+                "qValue": 5.0
+              },
+              {
+                "bandIndex": 5,
+                "frequency": 9000,
+                "gain": 9.0,
+                "qValue": 4.0
+              },
+              {
+                "bandIndex": 6,
+                "frequency": 10200,
+                "gain": 6.0,
+                "qValue": 5.0
+              },
+              {
+                "bandIndex": 7,
+                "frequency": 12000,
+                "gain": -6.0,
+                "qValue": 5.0
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "key": "usb.special_mode",
+      "behaviorVariant": "default",
+      "priority": 1,
+      "availability": {
+        "kind": "baseline",
+        "minFirmware": null,
+        "maxFirmware": null
+      },
+      "parameters": {}
+    }
+  ]
+}

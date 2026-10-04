@@ -1,0 +1,366 @@
+{
+  "revision": 1,
+  "device": {
+    "id": 2,
+    "name": "YUANDAO OriG in",
+    "customName": "OriG in",
+    "tag": "YUANDAO Wireless Device",
+    "imageUrl": [
+      "images/device/orig-in-detail.png"
+    ],
+    "previewImageUrl": [
+      "images/device/orig-in-preview.png"
+    ],
+    "remoteImageUrl": [
+      "https://bucket.nicehck.cn/images/device/orig-in-detail.png"
+    ],
+    "remotePreviewImageUrl": [
+      "https://bucket.nicehck.cn/images/device/orig-in-preview.png"
+    ],
+    "runtime": {
+      "transport": "bluetooth",
+      "controllerKind": "control",
+      "protocolVariant": "origin_v1",
+      "identity": {
+        "bluetoothNames": [
+          "OriG in",
+          "YUANDAO OriG in"
+        ],
+        "vendorId": null,
+        "productId": null,
+        "serviceUuid": "0000a100-1000-8000-4e48-434b4354524c",
+        "writeCharacteristicUuid": "0000a100-1001-8000-4e48-434b4354524c",
+        "notifyCharacteristicUuid": "0000a100-1002-8000-4e48-434b4354524c"
+      }
+    }
+  },
+  "features": [
+    {
+      "key": "bt.noise_control",
+      "behaviorVariant": "with_experimental",
+      "priority": 1,
+      "availability": {
+        "kind": "baseline",
+        "minFirmware": null,
+        "maxFirmware": null
+      },
+      "parameters": {
+        "options": [
+          {
+            "modeKind": "NOISE_CANCELING",
+            "parentModeKind": null,
+            "availability": {
+              "kind": "baseline",
+              "minFirmware": null,
+              "maxFirmware": null
+            }
+          },
+          {
+            "modeKind": "DEEP_NOISE_CANCELING",
+            "parentModeKind": null,
+            "availability": {
+              "kind": "baseline",
+              "minFirmware": null,
+              "maxFirmware": null
+            }
+          }
+        ]
+      }
+    },
+    {
+      "key": "bt.equalizer_preset",
+      "behaviorVariant": "default",
+      "priority": 1,
+      "availability": {
+        "kind": "baseline",
+        "minFirmware": null,
+        "maxFirmware": null
+      },
+      "parameters": {
+        "options": [
+          {
+            "eqIndex": 0,
+            "priority": 1,
+            "nameI18n": {
+              "en": "Pop",
+              "ja": "後悔の涙",
+              "ko": "후회의 눈물",
+              "zh": "悔恨之泪"
+            },
+            "availability": {
+              "kind": "baseline",
+              "minFirmware": null,
+              "maxFirmware": null
+            }
+          },
+          {
+            "eqIndex": 1,
+            "priority": 2,
+            "nameI18n": {
+              "en": "Balance",
+              "ja": "バランス良くニュートラル",
+              "ko": "균형 잡힌 뉴트럴",
+              "zh": "均衡中正"
+            },
+            "availability": {
+              "kind": "baseline",
+              "minFirmware": null,
+              "maxFirmware": null
+            }
+          },
+          {
+            "eqIndex": 2,
+            "priority": 3,
+            "nameI18n": {
+              "en": "Rock",
+              "ja": "欧米パワフル",
+              "ko": "일렉트로닉 록",
+              "zh": "欧美澎湃"
+            },
+            "availability": {
+              "kind": "baseline",
+              "minFirmware": null,
+              "maxFirmware": null
+            }
+          },
+          {
+            "eqIndex": 3,
+            "priority": 4,
+            "nameI18n": {
+              "en": "Natural",
+              "ja": "真律還元",
+              "ko": "원음 재현",
+              "zh": "真律还原"
+            },
+            "availability": {
+              "kind": "baseline",
+              "minFirmware": null,
+              "maxFirmware": null
+            }
+          },
+          {
+            "eqIndex": 5,
+            "priority": 6,
+            "nameI18n": {
+              "en": "Fine Tune",
+              "ja": "繊細な優音",
+              "ko": "섬세한 아름다운 소리",
+              "zh": "细腻佳音"
+            },
+            "availability": {
+              "kind": "firmware",
+              "minFirmware": "407",
+              "maxFirmware": "999999"
+            }
+          },
+          {
+            "eqIndex": 6,
+            "priority": 7,
+            "nameI18n": {
+              "en": "Velvet Voice",
+              "ja": "天鵞絨の声",
+              "ko": "벨벳 사운드",
+              "zh": "温婉人声"
+            },
+            "availability": {
+              "kind": "firmware",
+              "minFirmware": "407",
+              "maxFirmware": "999999"
+            }
+          },
+          {
+            "eqIndex": 4,
+            "priority": 99,
+            "nameI18n": {
+              "en": "Gaming",
+              "ja": "ゲーム最適化",
+              "ko": "게임 최적화",
+              "zh": "游戏优化"
+            },
+            "availability": {
+              "kind": "baseline",
+              "minFirmware": null,
+              "maxFirmware": null
+            }
+          }
+        ]
+      }
+    },
+    {
+      "key": "bt.game_mode",
+      "behaviorVariant": "coupled",
+      "priority": 1,
+      "availability": {
+        "kind": "firmware",
+        "minFirmware": "0",
+        "maxFirmware": "406"
+      },
+      "parameters": {}
+    },
+    {
+      "key": "bt.dual_connection",
+      "behaviorVariant": "default",
+      "priority": 1,
+      "availability": {
+        "kind": "baseline",
+        "minFirmware": null,
+        "maxFirmware": null
+      },
+      "parameters": {}
+    },
+    {
+      "key": "bt.touch_control",
+      "behaviorVariant": "basic",
+      "priority": 1,
+      "availability": {
+        "kind": "firmware",
+        "minFirmware": "0",
+        "maxFirmware": "406"
+      },
+      "parameters": {}
+    },
+    {
+      "key": "bt.ota",
+      "behaviorVariant": "default",
+      "priority": 1,
+      "availability": {
+        "kind": "baseline",
+        "minFirmware": null,
+        "maxFirmware": null
+      },
+      "parameters": {}
+    },
+    {
+      "key": "bt.find_earbuds",
+      "behaviorVariant": "default",
+      "priority": 1,
+      "availability": {
+        "kind": "baseline",
+        "minFirmware": null,
+        "maxFirmware": null
+      },
+      "parameters": {}
+    },
+    {
+      "key": "bt.game_mode",
+      "behaviorVariant": "independent",
+      "priority": 1,
+      "availability": {
+        "kind": "firmware",
+        "minFirmware": "407",
+        "maxFirmware": "9999"
+      },
+      "parameters": {}
+    },
+    {
+      "key": "bt.touch_control",
+      "behaviorVariant": "with_anc_cycle",
+      "priority": 1,
+      "availability": {
+        "kind": "firmware",
+        "minFirmware": "407",
+        "maxFirmware": "9999"
+      },
+      "parameters": {}
+    },
+    {
+      "key": "bt.tone_volume",
+      "behaviorVariant": "default",
+      "priority": 2,
+      "availability": {
+        "kind": "baseline",
+        "minFirmware": null,
+        "maxFirmware": null
+      },
+      "parameters": {
+        "maximum": 16,
+        "minimum": 0
+      }
+    },
+    {
+      "key": "bt.latency_mode",
+      "behaviorVariant": "coupled",
+      "priority": 2,
+      "availability": {
+        "kind": "firmware",
+        "minFirmware": "0",
+        "maxFirmware": "406"
+      },
+      "parameters": {}
+    },
+    {
+      "key": "bt.codec_control",
+      "behaviorVariant": "default",
+      "priority": 2,
+      "availability": {
+        "kind": "baseline",
+        "minFirmware": null,
+        "maxFirmware": null
+      },
+      "parameters": {
+        "options": [
+          {
+            "codecType": 1,
+            "defaultCodec": true,
+            "availability": {
+              "kind": "baseline",
+              "minFirmware": null,
+              "maxFirmware": null
+            }
+          },
+          {
+            "codecType": 0,
+            "defaultCodec": false,
+            "availability": {
+              "kind": "baseline",
+              "minFirmware": null,
+              "maxFirmware": null
+            }
+          },
+          {
+            "codecType": 2,
+            "defaultCodec": false,
+            "availability": {
+              "kind": "firmware",
+              "minFirmware": "407",
+              "maxFirmware": "99999"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "key": "bt.in_ear_detection",
+      "behaviorVariant": "default",
+      "priority": 2,
+      "availability": {
+        "kind": "firmware",
+        "minFirmware": "406",
+        "maxFirmware": "9999"
+      },
+      "parameters": {}
+    },
+    {
+      "key": "bt.latency_mode",
+      "behaviorVariant": "independent",
+      "priority": 2,
+      "availability": {
+        "kind": "firmware",
+        "minFirmware": "407",
+        "maxFirmware": "9999"
+      },
+      "parameters": {}
+    },
+    {
+      "key": "bt.wind_noise",
+      "behaviorVariant": "default",
+      "priority": 2,
+      "availability": {
+        "kind": "firmware",
+        "minFirmware": "402",
+        "maxFirmware": "9999"
+      },
+      "parameters": {}
+    }
+  ]
+}

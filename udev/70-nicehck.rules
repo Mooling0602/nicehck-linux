@@ -1,0 +1,46 @@
+# NICEHCK / YUANDAO USB-C DSP earphones — allow the logged-in user to reach the
+# vendor HID interface so `nicehck` and `nicehck-gui` work without sudo.
+#
+# Install:
+#   sudo cp 70-nicehck.rules /etc/udev/rules.d/
+#   sudo udevadm control --reload-rules && sudo udevadm trigger
+#   (then replug the headset, or log out and back in)
+#
+# On NixOS prefer the declarative route instead — it also keeps the rules in the
+# store so they cannot drift:
+#   programs.nicehck.enable = true;            # from this flake's nixosModules
+#
+# Vendor ID 0x3302 is shared by every wired NICEHCK/YUANDAO DSP model, so a single
+# rule covers the whole family. `TAG+="uaccess"` has systemd-logind grant an ACL to
+# the user who owns the active seat, which needs no group setup and no re-login
+# beyond replugging the device.
+#
+# The rules file must sort *before* 73-seat-late.rules, which is what actually
+# applies the uaccess ACL; hence the 70- prefix.
+#
+# Security note: this grants read/write on the headset's control endpoint. The worst
+# a local user can do is reconfigure their own headset's DAC — it is not a path to
+# the rest of the USB bus.
+
+# uaccess covers every system with systemd-logind (the norm on any modern distro).
+SUBSYSTEM=="hidraw", ATTRS{idVendor}=="3302", TAG+="uaccess"
+
+# The USB device node too, for anything that talks libusb rather than hidraw.
+# Only TAG, not MODE: without an explicit GROUP a MODE would still leave the group
+# as root, and uaccess is what does the real work.
+SUBSYSTEM=="usb", ATTR{idVendor}=="3302", TAG+="uaccess"
+
+# Keep the headset out of USB autosuspend. Suspend frames make the HID endpoint
+# drop replies and commands time out mid-transfer, and a timed-out EQ read looks
+# identical to a broken device.
+ACTION=="add", SUBSYSTEM=="usb", ATTR{idVendor}=="3302", TEST=="power/control", ATTR{power/control}="on"
+
+# ---------------------------------------------------------------------------
+# Fallback for systems *without* logind (no uaccess support): a plain group ACL.
+# This is deliberately left commented out, because udev cannot express "only if
+# logind is absent" — uncommenting it applies it everywhere, and on NixOS the
+# `users` group (gid 100) contains every normal account, which is broader access
+# than uaccess would give. If you need it, replace `users` with a dedicated group
+# and add yourself to it.
+#
+# SUBSYSTEM=="hidraw", ATTRS{idVendor}=="3302", GROUP="users", MODE="0660"

@@ -1,0 +1,641 @@
+{
+  "revision" : 1,
+  "device" : {
+    "id" : 17186,
+    "name" : "NICEHCK PureAural",
+    "customName" : "PureAural",
+    "tag" : "NICEHCK DSP Device",
+    "imageUrl" : [ "images/device/pure-aural.png" ],
+    "previewImageUrl" : [ "images/device/pure-aural.png" ],
+    "remoteImageUrl" : [ "https://bucket.nicehck.cn/images/device/pure-aural.png" ],
+    "remotePreviewImageUrl" : [ "https://bucket.nicehck.cn/images/device/pure-aural.png" ],
+    "runtime" : {
+      "transport" : "usb",
+      "controllerKind" : "control",
+      "protocolVariant" : "ttgk_v1",
+      "identity" : {
+        "bluetoothNames" : [ ],
+        "vendorId" : 13058,
+        "productId" : 17186,
+        "serviceUuid" : null,
+        "writeCharacteristicUuid" : null,
+        "notifyCharacteristicUuid" : null
+      }
+    }
+  },
+  "features" : [ {
+    "key" : "usb.equalizer",
+    "behaviorVariant" : "mode_switch",
+    "priority" : 1,
+    "availability" : {
+      "kind" : "baseline",
+      "minFirmware" : null,
+      "maxFirmware" : null
+    },
+    "parameters" : {
+      "minFrequency" : 20,
+      "maxFrequency" : 20000,
+      "frequencyNumber" : 10,
+      "minGain" : -12.0,
+      "maxGain" : 12.0,
+      "minQValue" : 0.2,
+      "maxQValue" : 12.0,
+      "minOffset" : -12.0,
+      "maxOffset" : 8.0,
+      "sampleRate" : 96000.0,
+      "presets" : [ {
+        "presetKey" : "default",
+        "presetIndex" : 1,
+        "offset" : 0.0,
+        "modeType" : null,
+        "description" : "",
+        "descriptionI18n" : { },
+        "nameI18n" : {
+          "zh" : "默认",
+          "ko" : "표준",
+          "en" : "Default",
+          "ja" : "標準モード"
+        },
+        "bands" : [ {
+          "bandIndex" : 0,
+          "frequency" : 20,
+          "gain" : 0.0,
+          "qValue" : 0.75
+        }, {
+          "bandIndex" : 1,
+          "frequency" : 50,
+          "gain" : 0.0,
+          "qValue" : 0.75
+        }, {
+          "bandIndex" : 2,
+          "frequency" : 100,
+          "gain" : 0.0,
+          "qValue" : 0.75
+        }, {
+          "bandIndex" : 3,
+          "frequency" : 200,
+          "gain" : 0.0,
+          "qValue" : 0.75
+        }, {
+          "bandIndex" : 4,
+          "frequency" : 4500,
+          "gain" : 0.0,
+          "qValue" : 0.75
+        }, {
+          "bandIndex" : 5,
+          "frequency" : 7000,
+          "gain" : 0.0,
+          "qValue" : 0.75
+        }, {
+          "bandIndex" : 6,
+          "frequency" : 8000,
+          "gain" : 0.0,
+          "qValue" : 0.75
+        }, {
+          "bandIndex" : 7,
+          "frequency" : 12500,
+          "gain" : 0.0,
+          "qValue" : 0.75
+        }, {
+          "bandIndex" : 8,
+          "frequency" : 15000,
+          "gain" : 0.0,
+          "qValue" : 0.75
+        }, {
+          "bandIndex" : 9,
+          "frequency" : 18000,
+          "gain" : 0.0,
+          "qValue" : 0.75
+        } ]
+      }, {
+        "presetKey" : "rock",
+        "presetIndex" : 2,
+        "offset" : 0.0,
+        "modeType" : null,
+        "description" : "",
+        "descriptionI18n" : { },
+        "nameI18n" : {
+          "zh" : "摇滚",
+          "ko" : "록",
+          "en" : "Rock",
+          "ja" : "ロック"
+        },
+        "bands" : [ {
+          "bandIndex" : 0,
+          "frequency" : 80,
+          "gain" : 2.5,
+          "qValue" : 0.45
+        }, {
+          "bandIndex" : 1,
+          "frequency" : 250,
+          "gain" : 1.7,
+          "qValue" : 0.5
+        }, {
+          "bandIndex" : 2,
+          "frequency" : 550,
+          "gain" : 1.0,
+          "qValue" : 0.75
+        }, {
+          "bandIndex" : 3,
+          "frequency" : 850,
+          "gain" : -1.8,
+          "qValue" : 0.75
+        }, {
+          "bandIndex" : 4,
+          "frequency" : 1800,
+          "gain" : -0.8,
+          "qValue" : 0.75
+        }, {
+          "bandIndex" : 5,
+          "frequency" : 2800,
+          "gain" : 1.4,
+          "qValue" : 1.5
+        }, {
+          "bandIndex" : 6,
+          "frequency" : 3800,
+          "gain" : 2.4,
+          "qValue" : 0.75
+        }, {
+          "bandIndex" : 7,
+          "frequency" : 8000,
+          "gain" : -1.8,
+          "qValue" : 1.4
+        }, {
+          "bandIndex" : 8,
+          "frequency" : 10000,
+          "gain" : 0.6,
+          "qValue" : 1.7
+        }, {
+          "bandIndex" : 9,
+          "frequency" : 15000,
+          "gain" : 0.8,
+          "qValue" : 0.75
+        } ]
+      }, {
+        "presetKey" : "vocal",
+        "presetIndex" : 3,
+        "offset" : 0.0,
+        "modeType" : null,
+        "description" : "",
+        "descriptionI18n" : { },
+        "nameI18n" : {
+          "zh" : "人声",
+          "ko" : "보컬",
+          "en" : "Vocal",
+          "ja" : "ボーカル"
+        },
+        "bands" : [ {
+          "bandIndex" : 0,
+          "frequency" : 80,
+          "gain" : 2.2,
+          "qValue" : 0.5
+        }, {
+          "bandIndex" : 1,
+          "frequency" : 250,
+          "gain" : 0.8,
+          "qValue" : 0.6
+        }, {
+          "bandIndex" : 2,
+          "frequency" : 500,
+          "gain" : -0.8,
+          "qValue" : 0.75
+        }, {
+          "bandIndex" : 3,
+          "frequency" : 1000,
+          "gain" : -0.4,
+          "qValue" : 0.6
+        }, {
+          "bandIndex" : 4,
+          "frequency" : 1750,
+          "gain" : -1.0,
+          "qValue" : 1.2
+        }, {
+          "bandIndex" : 5,
+          "frequency" : 2200,
+          "gain" : 0.3,
+          "qValue" : 1.5
+        }, {
+          "bandIndex" : 6,
+          "frequency" : 3650,
+          "gain" : 3.5,
+          "qValue" : 0.75
+        }, {
+          "bandIndex" : 7,
+          "frequency" : 5000,
+          "gain" : 2.0,
+          "qValue" : 0.8
+        }, {
+          "bandIndex" : 8,
+          "frequency" : 6800,
+          "gain" : -1.8,
+          "qValue" : 1.0
+        }, {
+          "bandIndex" : 9,
+          "frequency" : 12000,
+          "gain" : -2.0,
+          "qValue" : 0.5
+        } ]
+      }, {
+        "presetKey" : "instrumental",
+        "presetIndex" : 4,
+        "offset" : 0.0,
+        "modeType" : null,
+        "description" : "",
+        "descriptionI18n" : { },
+        "nameI18n" : {
+          "zh" : "器乐",
+          "ko" : "기악",
+          "en" : "Instrumental",
+          "ja" : "インストゥルメンタル"
+        },
+        "bands" : [ {
+          "bandIndex" : 0,
+          "frequency" : 50,
+          "gain" : 1.5,
+          "qValue" : 0.6
+        }, {
+          "bandIndex" : 1,
+          "frequency" : 200,
+          "gain" : 0.4,
+          "qValue" : 0.6
+        }, {
+          "bandIndex" : 2,
+          "frequency" : 550,
+          "gain" : -0.8,
+          "qValue" : 0.75
+        }, {
+          "bandIndex" : 3,
+          "frequency" : 800,
+          "gain" : -1.3,
+          "qValue" : 0.75
+        }, {
+          "bandIndex" : 4,
+          "frequency" : 2700,
+          "gain" : 2.0,
+          "qValue" : 1.6
+        }, {
+          "bandIndex" : 5,
+          "frequency" : 4500,
+          "gain" : 2.6,
+          "qValue" : 1.1
+        }, {
+          "bandIndex" : 6,
+          "frequency" : 8000,
+          "gain" : -3.2,
+          "qValue" : 0.75
+        }, {
+          "bandIndex" : 7,
+          "frequency" : 10000,
+          "gain" : 0.5,
+          "qValue" : 0.75
+        }, {
+          "bandIndex" : 8,
+          "frequency" : 12000,
+          "gain" : 0.8,
+          "qValue" : 0.75
+        }, {
+          "bandIndex" : 9,
+          "frequency" : 16000,
+          "gain" : 0.7,
+          "qValue" : 0.75
+        } ]
+      }, {
+        "presetKey" : "fps_footsteps",
+        "presetIndex" : 5,
+        "offset" : 0.0,
+        "modeType" : "GameMode",
+        "description" : "强化脚步声表现，削弱高频刺耳感",
+        "descriptionI18n" : {
+          "zh" : "强化脚步声表现，削弱高频刺耳感",
+          "ko" : "발소리 표현을 강화하고 고음역대 날카로운 느낌을 줄여줍니다",
+          "en" : "Enhances footsteps while reducing harsh highs",
+          "ja" : "足音の表現を強化し、高域の耳障りな感覚を抑える"
+        },
+        "nameI18n" : {
+          "zh" : "FPS 脚步",
+          "ko" : "FPS 발소리",
+          "en" : "FPS Footsteps",
+          "ja" : "FPS 足音"
+        },
+        "bands" : [ {
+          "bandIndex" : 0,
+          "frequency" : 60,
+          "gain" : -2.5,
+          "qValue" : 1.0
+        }, {
+          "bandIndex" : 1,
+          "frequency" : 180,
+          "gain" : 2.0,
+          "qValue" : 1.0
+        }, {
+          "bandIndex" : 2,
+          "frequency" : 250,
+          "gain" : 2.5,
+          "qValue" : 1.0
+        }, {
+          "bandIndex" : 3,
+          "frequency" : 500,
+          "gain" : 1.0,
+          "qValue" : 1.0
+        }, {
+          "bandIndex" : 4,
+          "frequency" : 1700,
+          "gain" : -2.8,
+          "qValue" : 0.9
+        }, {
+          "bandIndex" : 5,
+          "frequency" : 2500,
+          "gain" : -2.8,
+          "qValue" : 2.0
+        }, {
+          "bandIndex" : 6,
+          "frequency" : 3800,
+          "gain" : 1.0,
+          "qValue" : 2.0
+        }, {
+          "bandIndex" : 7,
+          "frequency" : 8000,
+          "gain" : 1.2,
+          "qValue" : 1.5
+        }, {
+          "bandIndex" : 8,
+          "frequency" : 11000,
+          "gain" : -3.5,
+          "qValue" : 0.9
+        }, {
+          "bandIndex" : 9,
+          "frequency" : 13000,
+          "gain" : 2.0,
+          "qValue" : 0.9
+        } ]
+      }, {
+        "presetKey" : "fps_gunshot",
+        "presetIndex" : 6,
+        "offset" : 0.0,
+        "modeType" : "GameMode",
+        "description" : "提高枪声清晰度，增强空间方位感知",
+        "descriptionI18n" : {
+          "zh" : "提高枪声清晰度，增强空间方位感知",
+          "ko" : "총소리 선명도를 높이고 공간적 방향감 인지를 강화합니다",
+          "en" : "Improves gunshot clarity and positional awareness",
+          "ja" : "銃声の明瞭度を向上させ、空間の方位感覚を強化する"
+        },
+        "nameI18n" : {
+          "zh" : "FPS 枪声",
+          "ko" : "FPS 총소리",
+          "en" : "FPS Gunshots",
+          "ja" : "FPS銃声"
+        },
+        "bands" : [ {
+          "bandIndex" : 0,
+          "frequency" : 50,
+          "gain" : -2.0,
+          "qValue" : 2.0
+        }, {
+          "bandIndex" : 1,
+          "frequency" : 100,
+          "gain" : -4.0,
+          "qValue" : 1.0
+        }, {
+          "bandIndex" : 2,
+          "frequency" : 250,
+          "gain" : -3.0,
+          "qValue" : 1.0
+        }, {
+          "bandIndex" : 3,
+          "frequency" : 1300,
+          "gain" : -1.0,
+          "qValue" : 1.3
+        }, {
+          "bandIndex" : 4,
+          "frequency" : 1800,
+          "gain" : 3.0,
+          "qValue" : 1.5
+        }, {
+          "bandIndex" : 5,
+          "frequency" : 3000,
+          "gain" : 2.0,
+          "qValue" : 1.5
+        }, {
+          "bandIndex" : 6,
+          "frequency" : 6000,
+          "gain" : 3.5,
+          "qValue" : 1.2
+        }, {
+          "bandIndex" : 7,
+          "frequency" : 8000,
+          "gain" : -3.0,
+          "qValue" : 2.5
+        }, {
+          "bandIndex" : 8,
+          "frequency" : 10000,
+          "gain" : 1.0,
+          "qValue" : 2.5
+        }, {
+          "bandIndex" : 9,
+          "frequency" : 12000,
+          "gain" : 3.0,
+          "qValue" : 2.0
+        } ]
+      }, {
+        "presetKey" : "vocal_boost",
+        "presetIndex" : 7,
+        "offset" : 0.0,
+        "modeType" : "GameMode",
+        "description" : "提升语音清晰度，减轻鼻音与喷麦感",
+        "descriptionI18n" : {
+          "zh" : "提升语音清晰度，减轻鼻音与喷麦感",
+          "ko" : "음성 선명도를 높이고, 비음과 마이크 잡음을 완화합니다",
+          "en" : "Improves voice clarity and reduces nasal and popping sounds",
+          "ja" : "音声の明瞭さを高め、鼻声とポップノイズを軽減"
+        },
+        "nameI18n" : {
+          "zh" : "语音增强",
+          "ko" : "음성 강화",
+          "en" : "Vocal Boost",
+          "ja" : "ボイスブースト"
+        },
+        "bands" : [ {
+          "bandIndex" : 0,
+          "frequency" : 30,
+          "gain" : -4.0,
+          "qValue" : 0.5
+        }, {
+          "bandIndex" : 1,
+          "frequency" : 100,
+          "gain" : 1.0,
+          "qValue" : 0.75
+        }, {
+          "bandIndex" : 2,
+          "frequency" : 220,
+          "gain" : -2.0,
+          "qValue" : 0.75
+        }, {
+          "bandIndex" : 3,
+          "frequency" : 400,
+          "gain" : -2.0,
+          "qValue" : 1.0
+        }, {
+          "bandIndex" : 4,
+          "frequency" : 550,
+          "gain" : 1.5,
+          "qValue" : 1.0
+        }, {
+          "bandIndex" : 5,
+          "frequency" : 800,
+          "gain" : -1.5,
+          "qValue" : 1.0
+        }, {
+          "bandIndex" : 6,
+          "frequency" : 2000,
+          "gain" : -1.8,
+          "qValue" : 0.75
+        }, {
+          "bandIndex" : 7,
+          "frequency" : 4500,
+          "gain" : -4.0,
+          "qValue" : 1.5
+        }, {
+          "bandIndex" : 8,
+          "frequency" : 9000,
+          "gain" : 3.0,
+          "qValue" : 0.55
+        }, {
+          "bandIndex" : 9,
+          "frequency" : 11000,
+          "gain" : 2.0,
+          "qValue" : 0.75
+        } ]
+      }, {
+        "presetKey" : "immersion_mode",
+        "presetIndex" : 8,
+        "offset" : 0.0,
+        "modeType" : "GameMode",
+        "description" : "增强低频量感与整体亮度，营造氛围感",
+        "descriptionI18n" : {
+          "zh" : "增强低频量感与整体亮度，营造氛围感",
+          "ko" : "저음 양감과 전체 밝기를 강화하여 더욱 몰입감 있는 사운드를 구현합니다",
+          "en" : "Boosts bass presence and overall brightness for an immersive feel",
+          "ja" : "低域の量感と全体の明るさを高め、雰囲気を作ります"
+        },
+        "nameI18n" : {
+          "zh" : "氛围沉浸",
+          "ko" : "앰비언스 몰입",
+          "en" : "Immersion Mode",
+          "ja" : "没入モード"
+        },
+        "bands" : [ {
+          "bandIndex" : 0,
+          "frequency" : 50,
+          "gain" : 4.0,
+          "qValue" : 0.9
+        }, {
+          "bandIndex" : 1,
+          "frequency" : 150,
+          "gain" : 3.0,
+          "qValue" : 0.9
+        }, {
+          "bandIndex" : 2,
+          "frequency" : 250,
+          "gain" : 1.5,
+          "qValue" : 0.8
+        }, {
+          "bandIndex" : 3,
+          "frequency" : 450,
+          "gain" : 0.5,
+          "qValue" : 0.8
+        }, {
+          "bandIndex" : 4,
+          "frequency" : 900,
+          "gain" : -1.0,
+          "qValue" : 1.0
+        }, {
+          "bandIndex" : 5,
+          "frequency" : 2500,
+          "gain" : -2.0,
+          "qValue" : 1.5
+        }, {
+          "bandIndex" : 6,
+          "frequency" : 3800,
+          "gain" : 3.0,
+          "qValue" : 1.5
+        }, {
+          "bandIndex" : 7,
+          "frequency" : 8000,
+          "gain" : 3.0,
+          "qValue" : 1.2
+        }, {
+          "bandIndex" : 8,
+          "frequency" : 11000,
+          "gain" : -1.0,
+          "qValue" : 0.9
+        }, {
+          "bandIndex" : 9,
+          "frequency" : 16000,
+          "gain" : 2.0,
+          "qValue" : 0.9
+        } ]
+      } ]
+    }
+  }, {
+    "key" : "usb.digital_filter",
+    "behaviorVariant" : "default",
+    "priority" : 2,
+    "availability" : {
+      "kind" : "baseline",
+      "minFirmware" : null,
+      "maxFirmware" : null
+    },
+    "parameters" : { }
+  }, {
+    "key" : "usb.gain_level",
+    "behaviorVariant" : "default",
+    "priority" : 3,
+    "availability" : {
+      "kind" : "baseline",
+      "minFirmware" : null,
+      "maxFirmware" : null
+    },
+    "parameters" : { }
+  }, {
+    "key" : "usb.work_mode",
+    "behaviorVariant" : "default",
+    "priority" : 4,
+    "availability" : {
+      "kind" : "baseline",
+      "minFirmware" : null,
+      "maxFirmware" : null
+    },
+    "parameters" : { }
+  }, {
+    "key" : "usb.microphone_gain",
+    "behaviorVariant" : "default",
+    "priority" : 5,
+    "availability" : {
+      "kind" : "baseline",
+      "minFirmware" : null,
+      "maxFirmware" : null
+    },
+    "parameters" : { }
+  }, {
+    "key" : "usb.channel_balance",
+    "behaviorVariant" : "default",
+    "priority" : 6,
+    "availability" : {
+      "kind" : "baseline",
+      "minFirmware" : null,
+      "maxFirmware" : null
+    },
+    "parameters" : { }
+  }, {
+    "key" : "usb.device_volume",
+    "behaviorVariant" : "default",
+    "priority" : 7,
+    "availability" : {
+      "kind" : "baseline",
+      "minFirmware" : null,
+      "maxFirmware" : null
+    },
+    "parameters" : { }
+  } ]
+}
