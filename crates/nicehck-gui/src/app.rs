@@ -22,6 +22,7 @@ use nicehck_protocol::device_config::{self, DeviceConfigFile, EqualizerCapabilit
 use nicehck_protocol::transport::{self, HidDevice, TransportError};
 
 use crate::curve;
+use crate::presets;
 use crate::theme;
 
 /// Default reply timeout for a single command round-trip.
@@ -99,6 +100,22 @@ pub struct NicehckApp {
     tx: Sender<IoResult>,
     rx: Receiver<IoResult>,
     log: Vec<String>,
+
+    /// Continuous write: every slider change is pushed to the device as soon as
+    /// the debounce timer expires, so the listener hears the result immediately.
+    live_write: bool,
+    /// Wall-clock time of the last slider change, for debounce.
+    last_edit_time: f64,
+    /// True when the bands/offset changed and a live write is pending.
+    pending_write: bool,
+
+    /// Custom presets loaded from disk.
+    custom_presets: Vec<presets::CustomPreset>,
+    /// Save-dialog state.
+    show_save_dialog: bool,
+    save_name: String,
+    save_offset: f32,
+    save_bands: Vec<Band>,
 }
 
 impl NicehckApp {
@@ -127,6 +144,14 @@ impl NicehckApp {
             tx,
             rx,
             log: Vec::new(),
+            live_write: false,
+            last_edit_time: 0.0,
+            pending_write: false,
+            custom_presets: presets::load_presets(),
+            show_save_dialog: false,
+            save_name: String::new(),
+            save_offset: 0.0,
+            save_bands: Vec::new(),
         };
         app.connect();
         app
@@ -318,6 +343,96 @@ impl NicehckApp {
     fn capability(&self) -> Option<EqualizerCapability> {
         self.connected.as_ref().and_then(|c| c.capability())
     }
+
+    /// Live-write debounce: called every frame after the UI has run. If the
+    /// bands or offset changed and enough time has passed since the last edit,
+    /// push the state to the device automatically.
+    ///
+    /// The debounce prevents flooding the HID endpoint while a slider is being
+    /// dragged — without it every mouse pixel would become a full 12-report
+    /// write burst. 150 ms is long enough to coalesce a drag but short enough
+    /// that the listener hears the result almost immediately.
+    fn maybe_live_write(&mut self, ctx: &egui::Context) {
+        if !self.live_write || self.busy || !self.writes_unlocked {
+            return;
+        }
+        if !self.pending_write {
+            return;
+        }
+        let now = ctx.input(|i| i.time);
+        if now - self.last_edit_time < 0.15 {
+            ctx.request_repaint_after(std::time::Duration::from_millis(50));
+            return;
+        }
+        self.pending_write = false;
+        self.apply_eq();
+    }
+
+    /// Record that the user changed something, so the live-write timer restarts.
+    fn mark_edited(&mut self, ctx: &egui::Context) {
+        self.last_edit_time = ctx.input(|i| i.time);
+        self.pending_write = true;
+        ctx.request_repaint_after(std::time::Duration::from_millis(50));
+    }
+
+    /// Open the save-preset dialog with a fresh default name.
+    fn open_save_dialog(&mut self) {
+        self.save_name = presets::next_default_name(&self.custom_presets);
+        self.save_offset = self.eq_offset_db;
+        self.save_bands = self.bands.clone();
+        self.show_save_dialog = true;
+    }
+
+    /// Persist the current state as a new custom preset.
+    fn commit_save_preset(&mut self) {
+        let name = if self.save_name.trim().is_empty() {
+            presets::next_default_name(&self.custom_presets)
+        } else {
+            self.save_name.trim().to_string()
+        };
+        let preset = presets::CustomPreset {
+            name: name.clone(),
+            offset: self.save_offset,
+            bands: self.save_bands.clone(),
+        };
+        self.custom_presets.push(preset);
+        match presets::save_presets(&self.custom_presets) {
+            Ok(path) => {
+                self.log
+                    .push(format!("已保存预设「{name}」→ {}", path.display()));
+                self.show_save_dialog = false;
+            }
+            Err(e) => {
+                self.error = Some(format!("保存预设失败：{e}"));
+            }
+        }
+    }
+
+    /// Load a custom preset into the sliders (local preview only).
+    fn load_custom_preset(&mut self, idx: usize) {
+        if let Some(p) = self.custom_presets.get(idx) {
+            self.bands = p.bands.clone();
+            self.eq_offset_db = p.offset;
+            self.preset_index = None;
+            self.log.push(format!("已载入预设「{}」", p.name));
+            // Loading is an edit too: with live-write on it should propagate.
+            // We cannot call mark_edited here (no ctx), so set the flag; the
+            // next frame's `pump` will pick it up through the normal path.
+            self.pending_write = true;
+        }
+    }
+
+    /// Delete a custom preset and persist the list.
+    fn delete_custom_preset(&mut self, idx: usize) {
+        if idx < self.custom_presets.len() {
+            let name = self.custom_presets[idx].name.clone();
+            self.custom_presets.remove(idx);
+            match presets::save_presets(&self.custom_presets) {
+                Ok(_) => self.log.push(format!("已删除预设「{name}」")),
+                Err(e) => self.error = Some(format!("保存预设列表失败：{e}")),
+            }
+        }
+    }
 }
 
 impl eframe::App for NicehckApp {
@@ -503,6 +618,12 @@ impl eframe::App for NicehckApp {
                     Tab::About => ui_about(ui, &p),
                 }
             });
+
+        // Save-preset dialog: floats over everything.
+        self.ui_save_dialog(&ctx, &p);
+
+        // Live-write debounce: runs after the UI so slider changes are picked up.
+        self.maybe_live_write(&ctx);
     }
 }
 
@@ -647,6 +768,58 @@ impl NicehckApp {
             });
     }
 
+    /// Floating save-preset dialog with a name input.
+    ///
+    /// Uses `egui::Window` with a `TextEdit`: egui routes IME events from winit
+    /// through the text cursor, so Chinese input works here without extra code.
+    fn ui_save_dialog(&mut self, ctx: &egui::Context, p: &theme::Palette) {
+        if !self.show_save_dialog {
+            return;
+        }
+        let mut open = self.show_save_dialog;
+        egui::Window::new("保存自定义预设")
+            .collapsible(false)
+            .resizable(false)
+            .anchor(egui::Align2::CENTER_CENTER, egui::Vec2::ZERO)
+            .open(&mut open)
+            .show(ctx, |ui| {
+                ui.label(RichText::new("预设名称").color(p.text_weak));
+                ui.add_space(4.0);
+                let resp = ui.add(
+                    egui::TextEdit::singleline(&mut self.save_name)
+                        .hint_text("自定义-1")
+                        .desired_width(260.0),
+                );
+                // Focus on open so the user can type immediately.
+                resp.request_focus();
+                ui.add_space(8.0);
+                ui.label(
+                    RichText::new(format!(
+                        "将保存 {} 个频段，offset {:+.1} dB",
+                        self.save_bands.len(),
+                        self.save_offset
+                    ))
+                    .size(11.0)
+                    .color(p.text_weak),
+                );
+                ui.add_space(12.0);
+                ui.horizontal(|ui| {
+                    if ui
+                        .add(egui::Button::new(RichText::new("保存").color(p.bg)).fill(p.accent))
+                        .clicked()
+                    {
+                        self.commit_save_preset();
+                    }
+                    if ui.button("取消").clicked() {
+                        self.show_save_dialog = false;
+                    }
+                });
+            });
+        if !open {
+            self.show_save_dialog = false;
+        }
+    }
+
     fn ui_equalizer(&mut self, ui: &mut egui::Ui, p: &theme::Palette) {
         // The EQ page can overflow: preset row + curve card + 8-band grid
         // together exceed a short viewport. Wrapping it in a vertical
@@ -707,6 +880,46 @@ impl NicehckApp {
             ui.add_space(10.0);
         }
 
+        // ── Custom presets ──────────────────────────────────────────────
+        if !self.custom_presets.is_empty() {
+            ui.label(RichText::new("自定义预设").size(12.0).color(p.text_weak));
+            ui.add_space(4.0);
+            egui::ScrollArea::horizontal()
+                .id_salt("custom_presets")
+                .auto_shrink(false)
+                .show(ui, |ui| {
+                    // Collect the action first: the loop borrows
+                    // `self.custom_presets` immutably, while the callbacks need
+                    // `&mut self`. Executing after the loop avoids the conflict.
+                    let mut action: Option<(usize, bool)> = None; // (idx, is_delete)
+                    ui.horizontal(|ui| {
+                        for (idx, cp) in self.custom_presets.iter().enumerate() {
+                            let text = RichText::new(&cp.name).size(13.0);
+                            let btn = egui::Button::new(text)
+                                .fill(p.surface_alt)
+                                .stroke(egui::Stroke::new(1.0, p.border));
+                            if ui.add(btn).clicked() {
+                                action = Some((idx, false));
+                            }
+                            let del = ui.add(
+                                egui::Button::new(RichText::new("×").size(11.0).color(p.text_weak))
+                                    .frame(false)
+                                    .min_size(egui::vec2(18.0, 18.0)),
+                            );
+                            if del.clicked() {
+                                action = Some((idx, true));
+                            }
+                        }
+                    });
+                    match action {
+                        Some((idx, false)) => self.load_custom_preset(idx),
+                        Some((idx, true)) => self.delete_custom_preset(idx),
+                        None => {}
+                    }
+                });
+            ui.add_space(10.0);
+        }
+
         // ── Response curve ──────────────────────────────────────────────
         theme::card(ui, p).show(ui, |ui| {
             ui.horizontal(|ui| {
@@ -763,12 +976,15 @@ impl NicehckApp {
                 ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                     // Offset is a global pre-gain, so it sits with Apply
                     // rather than with the per-band sliders.
-                    ui.add(
+                    let r_off = ui.add(
                         egui::Slider::new(&mut self.eq_offset_db, min_offset..=max_offset)
                             .suffix(" dB")
                             .fixed_decimals(1)
                             .text("Offset"),
                     );
+                    if r_off.changed() {
+                        self.mark_edited(ui.ctx());
+                    }
                 });
             });
             ui.label(
@@ -847,6 +1063,20 @@ impl NicehckApp {
                 }
                 if !self.writes_unlocked {
                     ui.label(RichText::new("写入未解锁").size(11.0).color(p.warn));
+                }
+
+                ui.add_space(12.0);
+
+                // Save current tuning as a named custom preset.
+                if ui
+                    .add_enabled(
+                        !self.bands.is_empty(),
+                        egui::Button::new(RichText::new("保存预设").color(p.text))
+                            .fill(p.surface_alt),
+                    )
+                    .clicked()
+                {
+                    self.open_save_dialog();
                 }
             });
         });

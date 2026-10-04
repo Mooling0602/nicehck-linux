@@ -9,6 +9,7 @@
 mod app;
 mod curve;
 mod fonts;
+mod presets;
 mod theme;
 
 fn main() -> eframe::Result<()> {

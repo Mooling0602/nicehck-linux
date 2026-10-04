@@ -198,7 +198,7 @@ impl WorkMode {
 }
 
 /// One parametric-EQ band as stored on the device.
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct Band {
     pub index: u8,
     /// Centre frequency in Hz.
