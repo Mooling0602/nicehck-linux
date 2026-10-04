@@ -556,8 +556,8 @@ impl NicehckApp {
                 ui.label(RichText::new("频响曲线").strong());
                 ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                     if ui
-                        .add_enabled(!self.busy, egui::Button::new("↻ 读取"))
-                        .on_hover_text("从耳机读取当前参数")
+                        .add_enabled(!self.busy, egui::Button::new("从设备读取 EQ"))
+                        .on_hover_text("从设备读取 EQ")
                         .clicked()
                     {
                         self.refresh_eq();
@@ -805,7 +805,7 @@ impl NicehckApp {
         egui::ScrollArea::vertical().show(ui, |ui| {
             // ── Identity card ───────────────────────────────────────────
             theme::card(ui, p).show(ui, |ui| {
-                ui.label(RichText::new("设备身份").strong());
+                ui.label(RichText::new("设备信息").strong());
                 ui.add_space(6.0);
                 egui::Grid::new("identity")
                     .num_columns(2)
@@ -816,8 +816,8 @@ impl NicehckApp {
                             ui.label(RichText::new(v).monospace());
                             ui.end_row();
                         };
-                        row(ui, "产品名称", &c.product_name);
-                        row(ui, "设备节点", &c.path);
+                        row(ui, "设备名称", &c.product_name);
+                        row(ui, "设备地址", &c.path);
                         row(
                             ui,
                             "USB ID",
@@ -835,7 +835,7 @@ impl NicehckApp {
             if let Some(eq) = c.capability() {
                 ui.add_space(10.0);
                 theme::card(ui, p).show(ui, |ui| {
-                    ui.label(RichText::new("均衡器能力").strong());
+                    ui.label(RichText::new("均衡器参数").strong());
                     ui.add_space(6.0);
                     egui::Grid::new("eqcap")
                         .num_columns(2)
@@ -846,7 +846,7 @@ impl NicehckApp {
                                 ui.label(RichText::new(v).monospace());
                                 ui.end_row();
                             };
-                            row(ui, "频段数", format!("{}", eq.frequency_number));
+                            row(ui, "频段数量", format!("{}", eq.frequency_number));
                             row(
                                 ui,
                                 "频率范围",
@@ -876,7 +876,7 @@ impl NicehckApp {
                         });
 
                     ui.add_space(10.0);
-                    ui.label(RichText::new("出厂预设").strong());
+                    ui.label(RichText::new("设备预设").strong());
                     ui.add_space(4.0);
                     egui::Grid::new("presets")
                         .num_columns(3)
