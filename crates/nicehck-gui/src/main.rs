@@ -16,6 +16,10 @@ fn main() -> eframe::Result<()> {
         viewport: egui::ViewportBuilder::default()
             .with_inner_size([1120.0, 760.0])
             .with_min_inner_size([880.0, 600.0])
+            // Close the OS title bar and draw our own: the system one carries
+            // the compositor's palette, which clashes with the app theme and
+            // pulls the eye away from the EQ controls.
+            .with_decorations(false)
             .with_title("NICEHCK Headset Control"),
         ..Default::default()
     };

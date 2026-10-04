@@ -336,6 +336,8 @@ impl eframe::App for NicehckApp {
             ctx.request_repaint_after(Duration::from_millis(500));
         }
 
+        self.ui_title_bar(ui, &p);
+
         egui::Panel::top("header")
             .frame(
                 egui::Frame::new()
@@ -502,7 +504,88 @@ impl eframe::App for NicehckApp {
 }
 
 impl NicehckApp {
+    /// Custom title bar: replaces the OS chrome so the window chrome matches
+    /// the app theme and the controls live in the same visual language.
+    fn ui_title_bar(&mut self, ui: &mut egui::Ui, p: &theme::Palette) {
+        let ctx = ui.ctx().clone();
+
+        egui::Panel::top("title_bar")
+            .exact_size(32.0)
+            .frame(
+                egui::Frame::new()
+                    .fill(p.surface)
+                    .inner_margin(egui::Margin::symmetric(10, 0)),
+            )
+            .show(ui, |ui| {
+                // Whole bar is a drag handle; the controls below opt out by
+                // being drawn after and using their own interaction.
+                let bar_rect = ui.max_rect();
+                let drag = ui.interact(
+                    bar_rect,
+                    ui.id().with("title_drag"),
+                    egui::Sense::click_and_drag(),
+                );
+                if drag.dragged() {
+                    ctx.send_viewport_cmd(egui::ViewportCommand::StartDrag);
+                }
+                // Double-click the bar to toggle maximise, the standard gesture.
+                if drag.double_clicked() {
+                    let maximised = ctx.input(|i| i.viewport().maximized.unwrap_or(false));
+                    ctx.send_viewport_cmd(egui::ViewportCommand::Maximized(!maximised));
+                }
+
+                ui.horizontal(|ui| {
+                    ui.label(RichText::new("NICEHCK").size(13.0).strong().color(p.accent));
+                    ui.add_space(6.0);
+                    ui.label(RichText::new("耳机控制台").size(11.0).color(p.text_weak));
+
+                    ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                        // Close last (rightmost), then maximise, then
+                        // minimise — matching the usual desktop order.
+                        let close =
+                            ui.add(egui::Button::new(RichText::new("✕").size(12.0)).frame(false));
+                        if close.hovered() {
+                            ui.painter().rect_filled(
+                                close.rect,
+                                egui::CornerRadius::same(theme::CHIP_RADIUS),
+                                p.err.gamma_multiply(0.35),
+                            );
+                        }
+                        if close.clicked() {
+                            ctx.send_viewport_cmd(egui::ViewportCommand::Close);
+                        }
+
+                        let maximised = ctx.input(|i| i.viewport().maximized.unwrap_or(false));
+                        let max_icon = if maximised { "❐" } else { "▢" };
+                        let max_btn = ui.add(
+                            egui::Button::new(RichText::new(max_icon).size(12.0)).frame(false),
+                        );
+                        if max_btn.clicked() {
+                            ctx.send_viewport_cmd(egui::ViewportCommand::Maximized(!maximised));
+                        }
+
+                        let min_btn =
+                            ui.add(egui::Button::new(RichText::new("—").size(12.0)).frame(false));
+                        if min_btn.clicked() {
+                            ctx.send_viewport_cmd(egui::ViewportCommand::Minimized(true));
+                        }
+                    });
+                });
+            });
+    }
+
     fn ui_equalizer(&mut self, ui: &mut egui::Ui, p: &theme::Palette) {
+        // The EQ page can overflow: preset row + curve card + 8-band grid
+        // together exceed a short viewport. Wrapping it in a vertical
+        // ScrollArea lets the whole page scroll instead of clipping.
+        egui::ScrollArea::vertical()
+            .id_salt("eq_scroll")
+            .show(ui, |ui| {
+                self.ui_equalizer_inner(ui, p);
+            });
+    }
+
+    fn ui_equalizer_inner(&mut self, ui: &mut egui::Ui, p: &theme::Palette) {
         let cap = self.capability();
         let (min_offset, max_offset) = cap
             .as_ref()
@@ -802,157 +885,162 @@ impl NicehckApp {
             return;
         };
 
-        egui::ScrollArea::vertical().show(ui, |ui| {
-            // ── Identity card ───────────────────────────────────────────
-            theme::card(ui, p).show(ui, |ui| {
-                ui.label(RichText::new("设备信息").strong());
-                ui.add_space(6.0);
-                egui::Grid::new("identity")
-                    .num_columns(2)
-                    .spacing([20.0, 6.0])
-                    .show(ui, |ui| {
-                        let row = |ui: &mut egui::Ui, k: &str, v: &str| {
-                            ui.label(RichText::new(k).color(p.text_weak));
-                            ui.label(RichText::new(v).monospace());
-                            ui.end_row();
-                        };
-                        row(ui, "设备名称", &c.product_name);
-                        row(ui, "设备地址", &c.path);
-                        row(
-                            ui,
-                            "USB ID",
-                            &format!("{:04X}:{:04X}", c.vendor_id, c.product_id),
-                        );
-                        if let Some(k) = &c.config {
-                            row(ui, "型号", &k.device.name);
-                            row(ui, "协议", &k.device.runtime.protocol_variant);
-                            row(ui, "控制器", &k.device.runtime.controller_kind);
-                        }
-                    });
-            });
-
-            // ── EQ capability card ──────────────────────────────────────
-            if let Some(eq) = c.capability() {
-                ui.add_space(10.0);
+        egui::ScrollArea::vertical()
+            .id_salt("device_scroll")
+            .show(ui, |ui| {
+                // ── Identity card ───────────────────────────────────────────
                 theme::card(ui, p).show(ui, |ui| {
-                    ui.label(RichText::new("均衡器参数").strong());
+                    ui.label(RichText::new("设备信息").strong());
                     ui.add_space(6.0);
-                    egui::Grid::new("eqcap")
+                    egui::Grid::new("identity")
                         .num_columns(2)
                         .spacing([20.0, 6.0])
                         .show(ui, |ui| {
-                            let row = |ui: &mut egui::Ui, k: &str, v: String| {
+                            let row = |ui: &mut egui::Ui, k: &str, v: &str| {
                                 ui.label(RichText::new(k).color(p.text_weak));
                                 ui.label(RichText::new(v).monospace());
                                 ui.end_row();
                             };
-                            row(ui, "频段数量", format!("{}", eq.frequency_number));
+                            row(ui, "设备名称", &c.product_name);
+                            row(ui, "设备地址", &c.path);
                             row(
                                 ui,
-                                "频率范围",
-                                format!(
-                                    "{:.0} {} {:.0} Hz",
-                                    eq.min_frequency,
-                                    theme::DASH,
-                                    eq.max_frequency
-                                ),
+                                "USB ID",
+                                &format!("{:04X}:{:04X}", c.vendor_id, c.product_id),
                             );
-                            row(
-                                ui,
-                                "增益范围",
-                                format!("{:+.0} .. {:+.0} dB", eq.min_gain, eq.max_gain),
-                            );
-                            row(
-                                ui,
-                                "Q 值范围",
-                                format!("{:.2} .. {:.2}", eq.min_q_value, eq.max_q_value),
-                            );
-                            row(
-                                ui,
-                                "Offset 范围",
-                                format!("{:+.0} .. {:+.0} dB", eq.min_offset, eq.max_offset),
-                            );
-                            row(ui, "采样率", format!("{:.0} Hz", eq.sample_rate));
+                            if let Some(k) = &c.config {
+                                row(ui, "型号", &k.device.name);
+                                row(ui, "协议", &k.device.runtime.protocol_variant);
+                                row(ui, "控制器", &k.device.runtime.controller_kind);
+                            }
                         });
+                });
 
+                // ── EQ capability card ──────────────────────────────────────
+                if let Some(eq) = c.capability() {
                     ui.add_space(10.0);
-                    ui.label(RichText::new("设备预设").strong());
-                    ui.add_space(4.0);
-                    egui::Grid::new("presets")
-                        .num_columns(3)
-                        .spacing([14.0, 4.0])
-                        .show(ui, |ui| {
-                            for preset in &eq.presets {
-                                theme::chip(ui, p, &preset.display_name(), p.accent);
-                                ui.label(
-                                    RichText::new(&preset.preset_key)
-                                        .monospace()
-                                        .color(p.text_weak),
+                    theme::card(ui, p).show(ui, |ui| {
+                        ui.label(RichText::new("均衡器参数").strong());
+                        ui.add_space(6.0);
+                        egui::Grid::new("eqcap")
+                            .num_columns(2)
+                            .spacing([20.0, 6.0])
+                            .show(ui, |ui| {
+                                let row = |ui: &mut egui::Ui, k: &str, v: String| {
+                                    ui.label(RichText::new(k).color(p.text_weak));
+                                    ui.label(RichText::new(v).monospace());
+                                    ui.end_row();
+                                };
+                                row(ui, "频段数量", format!("{}", eq.frequency_number));
+                                row(
+                                    ui,
+                                    "频率范围",
+                                    format!(
+                                        "{:.0} {} {:.0} Hz",
+                                        eq.min_frequency,
+                                        theme::DASH,
+                                        eq.max_frequency
+                                    ),
                                 );
-                                ui.label(
-                                    RichText::new(format!("offset {:+.1} dB", preset.offset))
-                                        .size(11.0)
-                                        .color(p.text_weak),
+                                row(
+                                    ui,
+                                    "增益范围",
+                                    format!("{:+.0} .. {:+.0} dB", eq.min_gain, eq.max_gain),
                                 );
-                                ui.end_row();
-                            }
-                        });
-                });
-            }
+                                row(
+                                    ui,
+                                    "Q 值范围",
+                                    format!("{:.2} .. {:.2}", eq.min_q_value, eq.max_q_value),
+                                );
+                                row(
+                                    ui,
+                                    "Offset 范围",
+                                    format!("{:+.0} .. {:+.0} dB", eq.min_offset, eq.max_offset),
+                                );
+                                row(ui, "采样率", format!("{:.0} Hz", eq.sample_rate));
+                            });
 
-            // ── Write gate card ─────────────────────────────────────────
-            ui.add_space(10.0);
-            theme::callout(if self.writes_unlocked {
-                p.warn
-            } else {
-                p.border
-            })
-            .show(ui, |ui| {
-                ui.horizontal_wrapped(|ui| {
-                    ui.colored_label(p.warn, "⚠");
-                    ui.label("写入会立即改变 DSP 参数，耳机不保存备份，请先记录当前设置。");
-                });
-                ui.add_space(6.0);
-                let label = if self.writes_unlocked {
-                    "🔒 锁定写入"
+                        ui.add_space(10.0);
+                        ui.label(RichText::new("设备预设").strong());
+                        ui.add_space(4.0);
+                        egui::Grid::new("presets")
+                            .num_columns(3)
+                            .spacing([14.0, 4.0])
+                            .show(ui, |ui| {
+                                for preset in &eq.presets {
+                                    theme::chip(ui, p, &preset.display_name(), p.accent);
+                                    ui.label(
+                                        RichText::new(&preset.preset_key)
+                                            .monospace()
+                                            .color(p.text_weak),
+                                    );
+                                    ui.label(
+                                        RichText::new(format!("offset {:+.1} dB", preset.offset))
+                                            .size(11.0)
+                                            .color(p.text_weak),
+                                    );
+                                    ui.end_row();
+                                }
+                            });
+                    });
+                }
+
+                // ── Write gate card ─────────────────────────────────────────
+                ui.add_space(10.0);
+                theme::callout(if self.writes_unlocked {
+                    p.warn
                 } else {
-                    "🔓 解锁写入"
-                };
-                if ui
-                    .button(RichText::new(label).color(if self.writes_unlocked {
-                        p.text
+                    p.border
+                })
+                .show(ui, |ui| {
+                    ui.horizontal_wrapped(|ui| {
+                        ui.colored_label(p.warn, "⚠");
+                        ui.label("写入会立即改变 DSP 参数，耳机不保存备份，请先记录当前设置。");
+                    });
+                    ui.add_space(6.0);
+                    let label = if self.writes_unlocked {
+                        "🔒 锁定写入"
                     } else {
-                        p.warn
-                    }))
-                    .clicked()
-                {
-                    self.writes_unlocked = !self.writes_unlocked;
-                }
-            });
+                        "🔓 解锁写入"
+                    };
+                    if ui
+                        .button(RichText::new(label).color(if self.writes_unlocked {
+                            p.text
+                        } else {
+                            p.warn
+                        }))
+                        .clicked()
+                    {
+                        self.writes_unlocked = !self.writes_unlocked;
+                    }
+                });
 
-            // ── Log card ────────────────────────────────────────────────
-            ui.add_space(10.0);
-            theme::card(ui, p).show(ui, |ui| {
-                ui.label(RichText::new("操作日志").strong());
-                ui.add_space(4.0);
-                if self.log.is_empty() {
-                    ui.label(RichText::new("尚无操作").color(p.text_weak));
-                } else {
-                    egui::ScrollArea::vertical()
-                        .max_height(140.0)
-                        .show(ui, |ui| {
-                            for line in self.log.iter().rev() {
-                                ui.label(RichText::new(line).monospace().color(p.text_weak));
-                            }
-                        });
-                }
+                // ── Log card ────────────────────────────────────────────────
+                ui.add_space(10.0);
+                theme::card(ui, p).show(ui, |ui| {
+                    ui.label(RichText::new("操作日志").strong());
+                    ui.add_space(4.0);
+                    if self.log.is_empty() {
+                        ui.label(RichText::new("尚无操作").color(p.text_weak));
+                    } else {
+                        egui::ScrollArea::vertical()
+                            .id_salt("device_log_scroll")
+                            .max_height(140.0)
+                            .show(ui, |ui| {
+                                for line in self.log.iter().rev() {
+                                    ui.label(RichText::new(line).monospace().color(p.text_weak));
+                                }
+                            });
+                    }
+                });
             });
-        });
     }
 }
 
 fn ui_about(ui: &mut egui::Ui, p: &theme::Palette) {
-    egui::ScrollArea::vertical().show(ui, |ui| {
+    egui::ScrollArea::vertical()
+        .id_salt("about_scroll")
+        .show(ui, |ui| {
         theme::card(ui, p).show(ui, |ui| {
             ui.label(
                 RichText::new("NICEHCK 耳机控制台")
